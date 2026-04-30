@@ -1,6 +1,6 @@
-# 📚 Sistema de Gestión Escolar - Documentación Completa
+#  Sistema de Gestión Escolar - Documentación Completa
 
-## 📋 Índice
+##  Índice
 
 1. [Resumen General](#resumen-general)
 2. [Arquitectura del Sistema](#arquitectura-del-sistema)
@@ -12,17 +12,17 @@
 
 ---
 
-## 🎯 Resumen General
+## Resumen General
 
 Este es un **Sistema de Gestión Escolar** completo desarrollado como una aplicación web de página única (SPA). El sistema permite la administración integral de una institución educativa, incluyendo:
 
-- 👥 Gestión de alumnos y profesores
-- 📖 Administración de clases y materias
-- ✅ Control de asistencias
-- 📊 Registro de calificaciones
-- 📈 Generación de reportes
-- 💰 Control de pagos
-- 📝 Bitácora de actividades
+-  Gestión de alumnos y profesores
+-  Administración de clases y materias
+-  Control de asistencias
+-  Registro de calificaciones
+-  Generación de reportes
+-  Control de pagos
+-  Bitácora de actividades
 
 ### Características Técnicas
 
@@ -34,7 +34,7 @@ Este es un **Sistema de Gestión Escolar** completo desarrollado como una aplica
 
 ---
 
-## 🏗️ Arquitectura del Sistema
+## Arquitectura del Sistema
 
 ### Patrón de Diseño
 
@@ -57,7 +57,7 @@ Usuario → Evento → Controlador → Modelo (state) → Vista (render) → DOM
 
 ---
 
-## 📁 Estructura de Archivos
+##  Estructura de Archivos
 
 ```
 proyecto pp/
@@ -70,7 +70,7 @@ proyecto pp/
 
 ---
 
-## 🗄️ Base de Datos
+##  Base de Datos
 
 ### Tablas Principales (MySQL Schema)
 
@@ -214,9 +214,9 @@ Registro de todas las acciones del sistema.
 
 ---
 
-## ⚙️ Funcionalidades
+##  Funcionalidades
 
-### 🔐 Sistema de Login
+###  Sistema de Login
 
 **Credenciales:**
 
@@ -233,7 +233,7 @@ Registro de todas las acciones del sistema.
 3. Se establece sesión en `sessionStorage`
 4. Redirecciona al dashboard correspondiente
 
-### 👨‍💼 Panel Administrador
+###  Panel Administrador
 
 #### **Inicio (Home)**
 
@@ -249,11 +249,11 @@ Registro de todas las acciones del sistema.
 
 **Funcionalidades:**
 
-- ➕ Agregar nuevo alumno
-- 📋 Listar todos los alumnos
-- 📝 Inscribir alumno a clases
-- ❌ Dar de baja / Reactivar alumno
-- 🔍 Ver materias inscritas
+-  Agregar nuevo alumno
+-  Listar todos los alumnos
+-  Inscribir alumno a clases
+-  Dar de baja / Reactivar alumno
+-  Ver materias inscritas
 
 **Código principal**: `renderAdminStudents()` (líneas 249-361)
 
@@ -270,12 +270,12 @@ Registro de todas las acciones del sistema.
 
 **Funcionalidades:**
 
-- ➕ Agregar nuevo profesor
-- ✏️ Editar datos del profesor
-- 📋 Listar profesores
-- ❌ Dar de baja / Reactivar
-- 🎓 Asignar clases a profesor
-- 📊 Ver clases del profesor con promedios
+-  Agregar nuevo profesor
+-  Editar datos del profesor
+-  Listar profesores
+-  Dar de baja / Reactivar
+-  Asignar clases a profesor
+-  Ver clases del profesor con promedios
 
 **Código principal**: `renderAdminTeachers()` (líneas 364-542)
 
@@ -289,10 +289,10 @@ Registro de todas las acciones del sistema.
 
 **Funcionalidades:**
 
-- ➕ Agregar nueva clase
-- 📊 Ver clases por carrera
-- 📋 Listado completo de clases
-- 👨‍🏫 Asignar profesor (opcional al crear)
+-  Agregar nueva clase
+-  Ver clases por carrera
+-  Listado completo de clases
+-  Asignar profesor (opcional al crear)
 
 **Código principal**: `renderAdminClasses()` (líneas 545-594)
 
@@ -308,10 +308,10 @@ Registro de todas las acciones del sistema.
 
 **Funcionalidades:**
 
-- 📈 Construir reporte de calificaciones
-- 📊 Gráfico visual de barras
-- 📄 Exportar a PDF para imprimir
-- 📉 Estadísticas: promedio, mínimo, máximo, reprobados
+-  Construir reporte de calificaciones
+-  Gráfico visual de barras
+-  Exportar a PDF para imprimir
+-  Estadísticas: promedio, mínimo, máximo, reprobados
 
 **Código principal**:
 
@@ -328,22 +328,22 @@ Registro de todas las acciones del sistema.
 4. Click en "Descargar PDF"
 5. Abre ventana de impresión con el reporte formateado
 
-### 👨‍🏫 Panel Maestro
+###  Panel Maestro
 
 #### **Inicio (Home)**
 
-- 📝 Lista de temas pendientes
-- 📊 Actividades recientes del sistema
+-  Lista de temas pendientes
+-  Actividades recientes del sistema
 - **Código**: `renderTeacherHome()` (líneas 704-718)
 
 #### **Lista de Alumnos (Asistencias)**
 
 **Funcionalidades:**
 
-- 📅 Seleccionar clase y fecha
-- ✅ Marcar asistencias (Presente/Ausente)
-- 💾 Guardar registro de asistencias
-- 📊 Carga automática de asistencias previas
+-  Seleccionar clase y fecha
+-  Marcar asistencias (Presente/Ausente)
+-  Guardar registro de asistencias
+-  Carga automática de asistencias previas
 
 **Código principal**: `renderTeacherStudents()` (líneas 721-791)
 
@@ -361,11 +361,11 @@ Registro de todas las acciones del sistema.
 
 **Funcionalidades:**
 
-- 📝 Seleccionar clase y evaluación
-- 🔢 Ingresar calificaciones (0-100)
-- ⚠️ Validación automática (menor a 70 = 0)
-- 💾 Guardar y recalcular promedio de clase
-- 📊 Actualización de promedio general
+-  Seleccionar clase y evaluación
+-  Ingresar calificaciones (0-100)
+-  Validación automática (menor a 70 = 0)
+-  Guardar y recalcular promedio de clase
+-  Actualización de promedio general
 
 **Código principal**: `renderTeacherGrades()` (líneas 794-871)
 
@@ -378,9 +378,9 @@ Registro de todas las acciones del sistema.
 
 ---
 
-## 💻 Código Detallado
+##  Código Detallado
 
-### 🎨 Estilos (styles.css)
+###  Estilos (styles.css)
 
 #### Variables CSS (Líneas 1-12)
 
@@ -414,7 +414,7 @@ Registro de todas las acciones del sistema.
 - Icono ☀ (sol) para modo claro
 - Transición suave de 0.25s
 
-### 🧠 Lógica JavaScript (script.js)
+###  Lógica JavaScript (script.js)
 
 #### 1. Estado Global (Líneas 2-45)
 
@@ -603,18 +603,18 @@ window.addEventListener("beforeunload", persist);
 
 ---
 
-## 📖 Guía de Uso
+##  Guía de Uso
 
 ### Para Administradores
 
-#### 1️⃣ Inicio de Sesión
+#### 1️ Inicio de Sesión
 
 1. Abrir `index.html` en navegador
 2. Ingresar `ADMINISTRADOR` como usuario
 3. Contraseña: `Admin1`
 4. Click en "Ingresar"
 
-#### 2️⃣ Registrar Alumno
+#### 2️ Registrar Alumno
 
 1. Click en "Alumnos" en el menú
 2. Click en "Nuevo alumno"
@@ -625,21 +625,21 @@ window.addEventListener("beforeunload", persist);
    - Fecha de inscripción
 4. Click en "Guardar"
 
-#### 3️⃣ Inscribir Alumno a Clase
+#### 3️ Inscribir Alumno a Clase
 
 1. En lista de alumnos, click en "Inscribir a clase"
 2. Seleccionar clase disponible
 3. Click en "Inscribir"
 4. Verificar en tabla de materias inscritas
 
-#### 4️⃣ Agregar Profesor
+#### 4️ Agregar Profesor
 
 1. Click en "Profesores"
 2. Click en "Nuevo profesor"
 3. Completar datos (usuario y contraseña son obligatorios)
 4. Click en "Guardar"
 
-#### 5️⃣ Asignar Clase a Profesor
+#### 5️ Asignar Clase a Profesor
 
 1. En sección "Profesores"
 2. Bajar a "Asignar clases a profesor"
@@ -647,7 +647,7 @@ window.addEventListener("beforeunload", persist);
 4. Seleccionar clase sin profesor
 5. Click en "Asignar"
 
-#### 6️⃣ Crear Clase
+#### 6️ Crear Clase
 
 1. Click en "Clases"
 2. Formulario "Agregar clase"
@@ -657,7 +657,7 @@ window.addEventListener("beforeunload", persist);
 6. Profesor (opcional)
 7. Click en "Agregar"
 
-#### 7️⃣ Generar Reporte de Calificaciones
+#### 7️ Generar Reporte de Calificaciones
 
 1. Click en "Reportes"
 2. Seleccionar clase
@@ -668,13 +668,13 @@ window.addEventListener("beforeunload", persist);
 
 ### Para Maestros
 
-#### 1️⃣ Inicio de Sesión
+#### 1️ Inicio de Sesión
 
 1. Ingresar nombre de usuario del profesor
 2. Ingresar contraseña
 3. Click en "Ingresar"
 
-#### 2️⃣ Tomar Asistencia
+#### 2️ Tomar Asistencia
 
 1. Click en "Alumnos" (Lista de alumnos)
 2. Seleccionar clase
@@ -683,7 +683,7 @@ window.addEventListener("beforeunload", persist);
 5. Marcar cada alumno como Presente/Ausente
 6. Click en "Guardar asistencias"
 
-#### 3️⃣ Registrar Calificaciones
+#### 3️ Registrar Calificaciones
 
 1. Click en "Calificaciones"
 2. Seleccionar clase
@@ -714,14 +714,14 @@ window.addEventListener("beforeunload", persist);
 
 ---
 
-## 🔧 Consideraciones Técnicas
+##  Consideraciones Técnicas
 
 ### Limitaciones Actuales
 
-- ❌ No hay backend real (todo en frontend)
-- ❌ Datos se pierden si se borra el cache del navegador
-- ❌ No hay autenticación segura
-- ❌ Un solo usuario a la vez
+-  No hay backend real (todo en frontend)
+-  Datos se pierden si se borra el cache del navegador
+-  No hay autenticación segura
+-  Un solo usuario a la vez
 
 ### Migración a Backend
 
@@ -735,16 +735,16 @@ Para implementar con backend:
 
 ### Mejoras Sugeridas
 
-- 🔐 Autenticación segura con bcrypt
-- 📧 Notificaciones por email
-- 🌐 Multiidioma
-- 📊 Reportes más complejos (Excel, etc.)
-- 🖼️ Fotos de perfil
-- 📅 Calendario de eventos
+-  Autenticación segura con bcrypt
+-  Notificaciones por email
+-  Multiidioma
+-  Reportes más complejos (Excel, etc.)
+-  Fotos de perfil
+-  Calendario de eventos
 
 ---
 
-## 📝 Resumen de Archivos
+##  Resumen de Archivos
 
 ### index.html (337 líneas)
 
@@ -780,25 +780,23 @@ Para implementar con backend:
 
 ---
 
-## 🎓 Conclusión
+##  Conclusión
 
 Este sistema es una solución completa y funcional para la gestión básica de una institución educativa. Aunque opera completamente en el frontend, su arquitectura está diseñada para facilitar la migración a un sistema backend con MySQL.
 
 **Puntos Fuertes:**
 
-- ✅ Código limpio y bien estructurado
-- ✅ Interfaz moderna y responsive
-- ✅ Funcionalidades completas
-- ✅ Esquema de BD listo para producción
-- ✅ Sistema de roles funcional
+-  Código limpio y bien estructurado
+-  Interfaz moderna y responsive
+-  Funcionalidades completas
+-  Esquema de BD listo para producción
+-  Sistema de roles funcional
 
 **Ideal para:**
 
-- 📚 Proyectos académicos
-- 🧪 Prototipado rápido
-- 🎯 Aprendizaje de desarrollo web
-- 🔨 Base para sistema empresarial
+-  Proyectos académicos
+-  Prototipado rápido
+-  Aprendizaje de desarrollo web
+-  Base para sistema empresarial
 
 ---
-
-**Creado con ❤️ para la gestión educativa**

@@ -2,15 +2,20 @@ const pool = require('../config/database');
 
 const StudentModel = {
   getAll: async () => {
-    const [rows] = await pool.query('SELECT s.*, c.name as career_name FROM students s JOIN careers c ON s.career_id = c.id ORDER BY s.full_name');
+    const [rows] = await pool.query(`
+      SELECT s.*, c.name as career_name 
+      FROM students s 
+      JOIN careers c ON s.career_id = c.id 
+      ORDER BY s.last_name, s.first_name
+    `);
     return rows;
   },
   
   create: async (data) => {
-    const { full_name, career_id, semester, enrollment_date, user_id } = data;
+    const { first_name, last_name, career_id, semester, enrollment_date, user_id } = data;
     const [res] = await pool.query(
-      'INSERT INTO students (full_name, career_id, semester, enrollment_date, user_id) VALUES (?, ?, ?, ?, ?)',
-      [full_name, career_id, semester, enrollment_date, user_id || null]
+      'INSERT INTO students (first_name, last_name, career_id, semester, enrollment_date, user_id) VALUES (?, ?, ?, ?, ?, ?)',
+      [first_name, last_name, career_id, semester, enrollment_date, user_id || null]
     );
     return res.insertId;
   },

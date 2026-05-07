@@ -27,7 +27,8 @@ CREATE TABLE users (
   username VARCHAR(50) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL, -- Hash bcrypt
   role ENUM('admin', 'teacher', 'student') NOT NULL DEFAULT 'teacher',
-  full_name VARCHAR(150) NOT NULL,
+  first_name VARCHAR(75) NOT NULL,
+  last_name VARCHAR(75) NOT NULL,
   
   -- Campos específicos de perfil (opcionales para admin, usados para teacher)
   age TINYINT UNSIGNED,
@@ -36,7 +37,8 @@ CREATE TABLE users (
   hired_date DATE DEFAULT (CURRENT_DATE),
   
   active BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_full_name (first_name, last_name)
 ) ENGINE=InnoDB;
 
 -- =====================
@@ -44,13 +46,15 @@ CREATE TABLE users (
 -- =====================
 CREATE TABLE students (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  full_name VARCHAR(150) NOT NULL,
+  first_name VARCHAR(75) NOT NULL,
+  last_name VARCHAR(75) NOT NULL,
   user_id INT DEFAULT NULL, -- Vinculación con login
   career_id INT NOT NULL,
   semester TINYINT UNSIGNED NOT NULL,
   enrollment_date DATE NOT NULL,
   active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_full_name (first_name, last_name),
   CONSTRAINT fk_students_user FOREIGN KEY (user_id)
     REFERENCES users(id) ON DELETE SET NULL,
   CONSTRAINT fk_students_career FOREIGN KEY (career_id)
@@ -238,16 +242,16 @@ INSERT INTO careers (name) VALUES
 
 -- Usuarios (Admin y Profesores)
 -- Password para todos es: admin123  (hash generado con bcrypt)
-INSERT INTO users (username, password, role, full_name, age, career_studied, specialty, hired_date) VALUES
-('admin', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'admin', 'Administrador Principal', NULL, NULL, NULL, NULL),
-('roberto', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'teacher', 'Dr. Roberto Martínez', 45, 'Ingeniería en Sistemas', 'Programación Web', '2024-01-05'),
-('ana', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'teacher', 'Lic. Ana Fernández', 38, 'Administración', 'Recursos Humanos', '2024-01-08');
+INSERT INTO users (username, password, role, first_name, last_name, age, career_studied, specialty, hired_date) VALUES
+('admin', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'admin', 'Administrador', 'Principal', NULL, NULL, NULL, NULL),
+('roberto', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'teacher', 'Roberto', 'Martínez', 45, 'Ingeniería en Sistemas', 'Programación Web', '2024-01-05'),
+('ana', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'teacher', 'Ana', 'Fernández', 38, 'Administración', 'Recursos Humanos', '2024-01-08');
 
 -- Alumnos
-INSERT INTO students (full_name, career_id, semester, enrollment_date) VALUES
-('Juan Pérez García', 1, 3, '2024-01-10'),
-('María González López', 2, 5, '2024-01-12'),
-('Carlos Rodríguez Martín', 3, 2, '2024-01-15');
+INSERT INTO students (first_name, last_name, career_id, semester, enrollment_date) VALUES
+('Juan', 'Pérez García', 1, 3, '2024-01-10'),
+('María', 'González López', 2, 5, '2024-01-12'),
+('Carlos', 'Rodríguez Martín', 3, 2, '2024-01-15');
 
 -- Clases (teacher_id ahora es user_id: 2 y 3)
 INSERT INTO classes (name, career_id, teacher_id, period, average_grade) VALUES

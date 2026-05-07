@@ -42,7 +42,7 @@ const AuthController = {
         const student = await StudentModel.getByUserId(user.id);
         studentId = student ? student.id : null;
       } else if (user.role === 'teacher') {
-        teacherId = user.id; // Asumimos ID usuario = ID info por ahora
+        teacherId = user.id;
       }
 
       res.json({
@@ -52,7 +52,8 @@ const AuthController = {
           id: user.id,
           username: user.username,
           role: user.role,
-          full_name: user.full_name,
+          first_name: user.first_name,
+          last_name: user.last_name,
           studentId,
           teacherId
         }
@@ -65,10 +66,10 @@ const AuthController = {
 
   register: async (req, res) => {
     try {
-      const { username, password, full_name, role } = req.body;
+      const { username, password, first_name, last_name, role } = req.body;
 
       // Validaciones básicas
-      if (!username || !password || !full_name) {
+      if (!username || !password || !first_name || !last_name) {
         return res.status(400).json({ error: 'Todos los campos son obligatorios' });
       }
 
@@ -84,36 +85,32 @@ const AuthController = {
       let newUserId = null;
 
       if (role === 'student') {
-        // Para alumnos, NO creamos registro en 'users' (tabla de staff), sino en 'students'.
-        // Sin embargo, si queremos que se logueen, necesitamos un usuario en 'users' O cambiar la lógica de login.
-        // Dado el esquema actual: 'users' es para Admin y Teacher. 'students' es otra tabla.
-        // SOLUCIÓN RAPIDA: Crear usuario en tabla 'users' con rol 'student' PARA LOGIN, 
-        // y ADEMÁS crear registro en tabla 'students' con los datos académicos.
-        // Nota: Esto implica que el alumno tendrá 2 IDs (user.id y student.id).
-        
-        // 1. Crear Usuario para Login
+        // Crear usuario en tabla 'users' con rol 'student' para LOGIN
         newUserId = await UserModel.create({
             username,
             password: hashedPassword,
-            full_name,
+            first_name,
+            last_name,
             role: 'student',
-            age: null, career_studied: null, specialty: null
+            age: null, 
+            career_studied: null, 
+            specialty: null
         });
 
-        // 2. Crear Registro de Alumno vinculado (idealmente. Por ahora lo creamos suelto o usamos el mismo nombre)
-        // El modelo actual de student requiere career_id, semester, enrollment_date
+        // Crear Registro de Alumno vinculado
         const { career_id, semester } = req.body;
         if (!career_id || !semester) {
              return res.status(400).json({ error: 'Faltan datos académicos para el alumno (carrera/semestre)' });
         }
         
-        const StudentModel = require('../models/studentModel'); // Require dinámico para evitar ciclos si los hubiera
+        const StudentModel = require('../models/studentModel');
         await StudentModel.create({
-            full_name,
+            first_name,
+            last_name,
             career_id,
             semester,
             enrollment_date: new Date().toISOString().slice(0, 10),
-            user_id: newUserId // FIXED: Linking student to the newly created user
+            user_id: newUserId
         });
         
       } else {
@@ -121,7 +118,8 @@ const AuthController = {
           newUserId = await UserModel.create({
             username,
             password: hashedPassword,
-            full_name,
+            first_name,
+            last_name,
             role: role || 'teacher',
             age: null,
             career_studied: null,

@@ -14,7 +14,10 @@ const UserModel = {
   // Obtener usuario por ID (sin password)
   findById: async (id) => {
     try {
-      const [rows] = await pool.query('SELECT id, username, role, full_name, created_at FROM users WHERE id = ?', [id]);
+      const [rows] = await pool.query(
+        'SELECT id, username, role, first_name, last_name, created_at FROM users WHERE id = ?', 
+        [id]
+      );
       return rows[0];
     } catch (error) {
       throw error;
@@ -23,13 +26,13 @@ const UserModel = {
 
   // Crear nuevo usuario (para funcionalidad futura de "Agregar Profesor")
   create: async (userData) => {
-    // role puede ser 'admin', 'teacher' o 'student' (aunque 'student' no esté en enum original, lo agregaremos)
-    const { username, password, role, full_name, age, career_studied, specialty } = userData;
+    // role puede ser 'admin', 'teacher' o 'student'
+    const { username, password, role, first_name, last_name, age, career_studied, specialty } = userData;
     try {
       const [result] = await pool.query(
-        `INSERT INTO users (username, password, role, full_name, age, career_studied, specialty) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [username, password, role, full_name, age, career_studied, specialty]
+        `INSERT INTO users (username, password, role, first_name, last_name, age, career_studied, specialty) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [username, password, role, first_name, last_name, age, career_studied, specialty]
       );
       return result.insertId;
     } catch (error) {

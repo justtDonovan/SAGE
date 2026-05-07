@@ -5,25 +5,25 @@ const TeacherModel = {
   getAll: async () => {
     // Obtenemos solo los users con rol 'teacher'
     const [rows] = await pool.query(`
-      SELECT id, full_name, age, career_studied, specialty, username, active, hired_date 
+      SELECT id, first_name, last_name, age, career_studied, specialty, username, active, hired_date 
       FROM users 
       WHERE role = 'teacher' 
-      ORDER BY full_name
+      ORDER BY last_name, first_name
     `);
     return rows;
   },
   
   // Crear profesor (Usuario con role='teacher')
   create: async (data) => {
-    const { full_name, age, career_studied, specialty, username, password } = data;
+    const { first_name, last_name, age, career_studied, specialty, username, password } = data;
     
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const [res] = await pool.query(
-      `INSERT INTO users (username, password, role, full_name, age, career_studied, specialty) 
-       VALUES (?, ?, 'teacher', ?, ?, ?, ?)`,
-      [username, hashedPassword, full_name, age, career_studied, specialty]
+      `INSERT INTO users (username, password, role, first_name, last_name, age, career_studied, specialty) 
+       VALUES (?, ?, 'teacher', ?, ?, ?, ?, ?)`,
+      [username, hashedPassword, first_name, last_name, age, career_studied, specialty]
     );
     return res.insertId;
   },
@@ -35,9 +35,9 @@ const TeacherModel = {
   },
 
   update: async (id, data) => {
-    const { full_name, age, career_studied, specialty, username, password } = data;
-    let query = 'UPDATE users SET full_name=?, age=?, career_studied=?, specialty=?, username=?';
-    let params = [full_name, age, career_studied, specialty, username];
+    const { first_name, last_name, age, career_studied, specialty, username, password } = data;
+    let query = 'UPDATE users SET first_name=?, last_name=?, age=?, career_studied=?, specialty=?, username=?';
+    let params = [first_name, last_name, age, career_studied, specialty, username];
 
     if (password) {
       const hashedPassword = await bcrypt.hash(password, 10);

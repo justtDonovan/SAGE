@@ -6,13 +6,13 @@ const state = {
     { id: 3, name: 'Contaduría' },
   ],
   students: [
-    { id: 1, full_name: 'Juan Pérez García', career_id: 1, semester: 3, enrollment_date: '2024-01-10', active: true },
-    { id: 2, full_name: 'María González López', career_id: 2, semester: 5, enrollment_date: '2024-01-12', active: true },
-    { id: 3, full_name: 'Carlos Rodríguez Martín', career_id: 3, semester: 2, enrollment_date: '2024-01-15', active: true },
+    { id: 1, first_name: 'Juan', last_name: 'Pérez García', career_id: 1, semester: 3, enrollment_date: '2024-01-10', active: true },
+    { id: 2, first_name: 'María', last_name: 'González López', career_id: 2, semester: 5, enrollment_date: '2024-01-12', active: true },
+    { id: 3, first_name: 'Carlos', last_name: 'Rodríguez Martín', career_id: 3, semester: 2, enrollment_date: '2024-01-15', active: true },
   ],
   teachers: [
-    { id: 1, full_name: 'Dr. Roberto Martínez', age: 45, career_studied: 'Ingeniería en Sistemas', specialty: 'Programación Web', username: 'roberto', password: '12345', active: true },
-    { id: 2, full_name: 'Lic. Ana Fernández', age: 38, career_studied: 'Administración', specialty: 'Recursos Humanos', username: 'ana', password: '12345', active: true },
+    { id: 1, first_name: 'Roberto', last_name: 'Martínez', age: 45, career_studied: 'Ingeniería en Sistemas', specialty: 'Programación Web', username: 'roberto', password: '12345', active: true },
+    { id: 2, first_name: 'Ana', last_name: 'Fernández', age: 38, career_studied: 'Administración', specialty: 'Recursos Humanos', username: 'ana', password: '12345', active: true },
   ],
   classes: [
     { id: 1, name: 'Programación Web I', career_id: 1, teacher_id: 1, period: '2024A', average_grade: 8.5 },
@@ -197,7 +197,8 @@ if (registerForm) {
     e.preventDefault();
     const username = byId('regUsername').value.trim();
     const password = byId('regPassword').value.trim();
-    const full_name = byId('regFullName').value.trim();
+    const first_name = byId('regFirstName').value.trim();
+    const last_name = byId('regLastName').value.trim();
     const role = regRole ? regRole.value : 'teacher';
     
     // Campos extra para estudiante
@@ -207,7 +208,7 @@ if (registerForm) {
       extraData.semester = Number(byId('regSemester').value) || 1;
     }
 
-    if (!username || !password || !full_name) {
+    if (!username || !password || !first_name || !last_name) {
       alert('Todos los campos obligatorios deben llenarse');
       return;
     }
@@ -219,7 +220,8 @@ if (registerForm) {
         body: JSON.stringify({ 
           username, 
           password, 
-          full_name, 
+          first_name, 
+          last_name, 
           role,
           ...extraData
         })
@@ -272,7 +274,9 @@ loginForm.addEventListener('submit', async (e) => {
     sessionStorage.setItem('token', token);
     sessionStorage.setItem('role', user.role);
     sessionStorage.setItem('userId', user.id);
-    sessionStorage.setItem('userName', user.full_name);
+    sessionStorage.setItem('userName', `${user.first_name} ${user.last_name}`);
+    sessionStorage.setItem('userFirstName', user.first_name);
+    sessionStorage.setItem('userLastName', user.last_name);
     
     if (user.role === 'teacher') {
       sessionStorage.setItem('teacherId', user.teacherId);
@@ -429,9 +433,10 @@ async function renderAdminStudents() {
       const disableEnroll = isInactive ? 'disabled title="Alumno dado de baja"' : '';
       const toggleText = isInactive ? 'Reactivar' : 'Dar de baja';
       const date = new Date(s.enrollment_date).toLocaleDateString();
+      const fullName = `${s.first_name} ${s.last_name}`;
 
       return `<tr>
-        <td>${s.full_name}${status}</td>
+        <td>${fullName}${status}</td>
         <td>${c}</td>
         <td>${s.semester}</td>
         <td>${date}</td>
@@ -455,7 +460,8 @@ async function renderAdminStudents() {
     form.onsubmit = async (e) => {
       e.preventDefault();
       const newStudent = {
-        full_name: byId('stName').value.trim(),
+        first_name: byId('stFirstName').value.trim(),
+        last_name: byId('stLastName').value.trim(),
         career_id: Number(byId('stCareer').value),
         semester: Number(byId('stSemester').value),
         enrollment_date: byId('stEnrollment').value
@@ -621,9 +627,10 @@ async function renderAdminTeachers() {
       const isInactive = t.active === 0;
       const status = isInactive ? ' (Baja)' : '';
       const toggleText = isInactive ? 'Reactivar' : 'Dar de baja';
+      const fullName = `${t.first_name} ${t.last_name}`;
       
       return `<tr>
-        <td>${t.full_name}${status}</td>
+        <td>${fullName}${status}</td>
         <td>${t.age ?? '-'}</td>
         <td>${t.career_studied ?? '-'}</td>
         <td>${t.specialty ?? '-'}</td>
@@ -644,7 +651,8 @@ async function renderAdminTeachers() {
       e.preventDefault();
       
       const newTeacher = {
-        full_name: byId('tcName').value.trim(),
+        first_name: byId('tcFirstName').value.trim(),
+        last_name: byId('tcLastName').value.trim(),
         age: Number(byId('tcAge').value) || null,
         career_studied: byId('tcCareerStudied').value.trim() || null,
         specialty: byId('tcSpecialty').value.trim() || null,
@@ -699,7 +707,8 @@ async function renderAdminTeachers() {
         const teacher = teachers.find(t => t.id === id);
         if(teacher) {
             byId('editTeacherId').value = teacher.id;
-            byId('editTcName').value = teacher.full_name;
+            byId('editTcFirstName').value = teacher.first_name;
+            byId('editTcLastName').value = teacher.last_name;
             byId('editTcAge').value = teacher.age || '';
             byId('editTcCareerStudied').value = teacher.career_studied || '';
             byId('editTcSpecialty').value = teacher.specialty || '';
@@ -718,7 +727,8 @@ async function renderAdminTeachers() {
       e.preventDefault();
       const id = byId('editTeacherId').value;
       const updatedTeacher = {
-        full_name: byId('editTcName').value.trim(),
+        first_name: byId('editTcFirstName').value.trim(),
+        last_name: byId('editTcLastName').value.trim(),
         age: Number(byId('editTcAge').value) || null,
         career_studied: byId('editTcCareerStudied').value.trim() || null,
         specialty: byId('editTcSpecialty').value.trim() || null,

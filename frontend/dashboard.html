@@ -1,0 +1,686 @@
+﻿<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema Escolar</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Custom Cursor -->
+    <div class="custom-cursor"></div>
+    <div class="custom-cursor-follower"></div>
+
+    <!-- Login -->
+    <section id="login" class="view">
+      <div class="login-card">
+        <img src="assets/logo.png" alt="SAGE Logo" class="logo-login" />
+        <h1>Sistema de Gesti├│n Escolar</h1>
+
+        <form id="loginForm">
+          <label for="username">Usuario</label>
+          <input
+            type="text"
+            id="username"
+            placeholder="Escriba ADMINISTRADOR o su usuario de profesor"
+            required
+          />
+          <label for="password">Contrase├▒a</label>
+          <input type="password" id="password" placeholder="12345" required />
+          <button type="submit" id="loginBtn" class="button">
+            Ingresar
+          </button>
+          <div id="loginError" class="error" hidden></div>
+          <button
+            type="button"
+            id="showRegisterBtn"
+            class="button success"
+            style="margin-top: 0.5rem;"
+          >
+            Registrar nuevo usuario
+          </button>
+        </form>
+
+        <form id="registerForm" hidden>
+          <div style="margin-bottom: 1rem; text-align: center">
+            <strong>Registro de Usuario</strong>
+          </div>
+           <div id="registerError" class="error" hidden></div>
+          <label for="regFirstName">Nombre</label>
+          <input
+            type="text"
+            id="regFirstName"
+            placeholder="Ej. Juan"
+            required
+          />
+          
+          <label for="regLastName">Apellido(s)</label>
+          <input
+            type="text"
+            id="regLastName"
+            placeholder="Ej. P├®rez Garc├¡a"
+            required
+          />
+
+          <label for="regRole">Tipo de cuenta</label>
+          <select id="regRole" required>
+            <option value="teacher">Profesor</option>
+            <option value="student">Alumno</option>
+            <option value="admin">Administrador</option>
+          </select>
+
+          <div id="regStudentFields" hidden>
+            <label for="regCareer">Carrera</label>
+            <select id="regCareer">
+              <!-- Se llenar├í din├ímicamente -->
+            </select>
+            <label for="regSemester">Semestre</label>
+            <input type="number" id="regSemester" min="1" max="12" placeholder="1" />
+          </div>
+
+          <label for="regUsername">Usuario</label>
+          <input
+            type="text"
+            id="regUsername"
+            placeholder="Usuario ├║nico"
+            required
+          />
+
+          <label for="regPassword">Contrase├▒a</label>
+          <input
+            type="password"
+            id="regPassword"
+            placeholder="Contrase├▒a segura"
+            required
+          />
+
+          <button type="submit" class="button success">Registrarse</button>
+          <button
+            type="button"
+            id="cancelRegisterBtn"
+            class="button danger"
+            style="margin-top: 0.5rem;"
+          >
+            Cancelar
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Panel ADMINISTRADOR -->
+    <section id="adminDashboard" class="view" hidden>
+      <header class="topbar">
+        <div class="brand">
+          <img src="assets/logo.png" alt="SAGE Logo" class="logo-topbar" />
+          Administrador
+        </div>
+        <nav class="menu">
+          <button class="link" data-admin="home">Inicio</button>
+          <button class="link" data-admin="students">Alumnos</button>
+          <button class="link" data-admin="teachers">Profesores</button>
+          <button class="link" data-admin="classes">Clases</button>
+          <button class="link" data-admin="reports">Reportes</button>
+        </nav>
+        <label class="switch">
+          <input type="checkbox" data-theme-toggle>
+          <span class="slider"></span>
+        </label>
+        <button id="logoutAdmin" class="btn">Cerrar sesi├│n</button>
+      </header>
+
+      <main class="content">
+        <!-- Admin Home -->
+        <section id="admin-home" class="panel">
+          <h2>Resumen</h2>
+          <div class="stats-grid">
+            <div class="stat">
+              <div class="value" id="countStudents">0</div>
+              <div class="label">Alumnos</div>
+            </div>
+            <div class="stat">
+              <div class="value" id="countTeachers">0</div>
+              <div class="label">Profesores</div>
+            </div>
+            <div class="stat">
+              <div class="value" id="countClasses">0</div>
+              <div class="label">Clases</div>
+            </div>
+            <div class="stat">
+              <div class="value" id="countTodayPresent">0</div>
+              <div class="label">Asistencias hoy</div>
+            </div>
+          </div>
+
+          <h3>Actividad reciente</h3>
+          <ul id="adminActivities" class="list"></ul>
+        </section>
+
+        <!-- Admin Students -->
+        <section id="admin-students" class="panel" hidden>
+          <div class="panel-header">
+            <h2>Alumnos</h2>
+            <button id="addStudentBtn" class="btn primary">Nuevo alumno</button>
+          </div>
+          <div class="panel-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Carrera</th>
+                  <th>Semestre</th>
+                  <th>Inscripci├│n</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="studentsTable"></tbody>
+            </table>
+
+            <details id="studentFormCard" class="form-card" hidden>
+              <summary>Registrar alumno</summary>
+              <form id="studentForm">
+                <input
+                  type="text"
+                  id="stFirstName"
+                  placeholder="Nombre"
+                  required
+                />
+                <input
+                  type="text"
+                  id="stLastName"
+                  placeholder="Apellido(s)"
+                  required
+                />
+                <select id="stCareer" required></select>
+                <input
+                  type="number"
+                  id="stSemester"
+                  placeholder="Semestre"
+                  min="1"
+                  max="12"
+                  required
+                />
+                <input type="date" id="stEnrollment" required />
+                <button type="submit" class="btn primary">Guardar</button>
+              </form>
+            </details>
+
+            <details class="form-card" id="enrollStudentForm" hidden>
+              <summary>Inscribir alumno a clase</summary>
+              <form id="enrollStudentFormInner">
+                <input type="hidden" id="enrollStudentId" />
+                <p id="enrollStudentName"></p>
+                <label for="enrollClass">Clase</label>
+                <select id="enrollClass" required></select>
+                <button type="submit" class="btn primary">Inscribir</button>
+                <button type="button" id="cancelEnrollStudent" class="btn">
+                  Cancelar
+                </button>
+              </form>
+              <h4>Materias inscritas</h4>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Materia</th>
+                    <th>Profesor</th>
+                    <th>Periodo</th>
+                  </tr>
+                </thead>
+                <tbody id="studentEnrolledClassesTable"></tbody>
+              </table>
+            </details>
+          </div>
+        </section>
+
+        <!-- Admin Teachers -->
+        <section id="admin-teachers" class="panel" hidden>
+          <div class="panel-header">
+            <h2>Profesores</h2>
+            <button id="addTeacherBtn" class="btn primary">
+              Nuevo profesor
+            </button>
+          </div>
+          <div class="panel-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Edad</th>
+                  <th>Estudios</th>
+                  <th>Especialidad</th>
+                  <th>Usuario</th>
+                  <th>Contrase├▒a</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="teachersTable"></tbody>
+            </table>
+
+            <details id="teacherFormCard" class="form-card" hidden>
+              <summary>Registrar profesor</summary>
+              <form id="teacherForm">
+                <input
+                  type="text"
+                  id="tcFirstName"
+                  placeholder="Nombre"
+                  required
+                />
+                <input
+                  type="text"
+                  id="tcLastName"
+                  placeholder="Apellido(s)"
+                  required
+                />
+                <input
+                  type="number"
+                  id="tcAge"
+                  placeholder="Edad"
+                  min="18"
+                  max="80"
+                />
+                <input
+                  type="text"
+                  id="tcCareerStudied"
+                  placeholder="Carrera estudiada"
+                />
+                <input
+                  type="text"
+                  id="tcSpecialty"
+                  placeholder="Especialidad"
+                />
+                <input
+                  type="text"
+                  id="tcUsername"
+                  placeholder="Usuario"
+                  required
+                />
+                <input
+                  type="password"
+                  id="tcPassword"
+                  placeholder="Contrase├▒a"
+                  required
+                />
+                <button type="submit" class="btn primary">Guardar</button>
+              </form>
+            </details>
+
+            <details class="form-card" id="editTeacherForm" hidden>
+              <summary>Editar profesor</summary>
+              <form id="editTeacherFormInner">
+                <input type="hidden" id="editTeacherId" />
+                <input
+                  type="text"
+                  id="editTcFirstName"
+                  placeholder="Nombre"
+                  required
+                />
+                <input
+                  type="text"
+                  id="editTcLastName"
+                  placeholder="Apellido(s)"
+                  required
+                />
+                <input
+                  type="number"
+                  id="editTcAge"
+                  placeholder="Edad"
+                  min="18"
+                  max="80"
+                />
+                <input
+                  type="text"
+                  id="editTcCareerStudied"
+                  placeholder="Carrera estudiada"
+                />
+                <input
+                  type="text"
+                  id="editTcSpecialty"
+                  placeholder="Especialidad"
+                />
+                <input
+                  type="text"
+                  id="editTcUsername"
+                  placeholder="Usuario"
+                  required
+                />
+                <input
+                  type="password"
+                  id="editTcPassword"
+                  placeholder="Contrase├▒a"
+                  required
+                />
+                <button type="submit" class="btn primary">
+                  Guardar cambios
+                </button>
+                <button type="button" id="cancelEditTeacher" class="btn">
+                  Cancelar
+                </button>
+              </form>
+            </details>
+
+            <div class="panel" style="margin-top: 12px">
+              <div class="panel-header">
+                <h3>Asignar clases a profesor</h3>
+              </div>
+              <form id="assignTeacherToClassForm" class="form-inline">
+                <label for="atTeacher">Profesor</label>
+                <select id="atTeacher"></select>
+                <label for="atClass">Clase (sin profesor)</label>
+                <select id="atClass"></select>
+                <button type="submit" class="btn">Asignar</button>
+              </form>
+              <div id="atMsg" class="muted" style="margin-top: 8px"></div>
+
+              <h4 style="margin-top: 12px">Clases del profesor</h4>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Clase</th>
+                    <th>Carrera</th>
+                    <th>Periodo</th>
+                    <th>Promedio</th>
+                  </tr>
+                </thead>
+                <tbody id="teacherClassesTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Admin Classes -->
+        <section id="admin-classes" class="panel" hidden>
+          <h2>Clases</h2>
+          <div>
+            <h3>Por carrera</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Carrera</th>
+                  <th>Clases</th>
+                </tr>
+              </thead>
+              <tbody id="classesByCareerTable"></tbody>
+            </table>
+          </div>
+
+          <div class="panel" style="margin-top: 12px">
+            <div class="panel-header">
+              <h3>Agregar clase</h3>
+            </div>
+            <form id="addClassForm" class="form-inline">
+              <input
+                type="text"
+                id="clName"
+                placeholder="Nombre de la clase"
+                required
+              />
+              <select id="clCareer" required></select>
+              <input
+                type="text"
+                id="clPeriod"
+                placeholder="Periodo (ej. 2024A)"
+                required
+              />
+              <select id="clTeacherAdd">
+                <option value="">Sin profesor</option>
+              </select>
+              <button type="submit" class="btn primary">Agregar</button>
+            </form>
+          </div>
+
+          <div class="panel" style="margin-top: 12px">
+            <div class="panel-header">
+              <h3>Listado de clases</h3>
+            </div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Carrera</th>
+                  <th>Profesor</th>
+                  <th>Periodo</th>
+                  <th>Promedio</th>
+                </tr>
+              </thead>
+              <tbody id="classesTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Admin Reports -->
+        <section id="admin-reports" class="panel" hidden>
+          <h2>Reportes y Pagos</h2>
+          <div class="panel" style="margin-bottom: 12px">
+            <div class="form-inline">
+              <label for="repClassSel">Clase</label>
+              <select id="repClassSel"></select>
+              <label for="repEvalInput">Evaluaci├│n</label>
+              <input id="repEvalInput" type="text" placeholder="Final" />
+              <button id="btnBuildGrades" class="btn primary">
+                Construir reporte
+              </button>
+              <button id="btnPdfFromPreview" class="btn" disabled>
+                Descargar PDF
+              </button>
+            </div>
+            <div id="repPreview" class="panel" style="margin-top: 12px"></div>
+          </div>
+        </section>
+      </main>
+    </section>
+
+    <!-- Panel MAESTRO -->
+    <section id="teacherDashboard" class="view" hidden>
+      <header class="topbar">
+        <div class="brand">
+          <img src="assets/logo.png" alt="SAGE Logo" class="logo-topbar" />
+          Maestro
+        </div>
+        <nav class="menu">
+          <button class="link" data-teacher="home">Inicio</button>
+          <button class="link" data-teacher="students">Alumnos</button>
+          <button class="link" data-teacher="grades">Calificaciones</button>
+        </nav>
+        <label class="switch">
+          <input type="checkbox" data-theme-toggle>
+          <span class="slider"></span>
+        </label>
+        <button id="logoutTeacher" class="btn">Cerrar sesi├│n</button>
+      </header>
+
+      <main class="content">
+        <!-- Teacher Home -->
+        <section id="teacher-home" class="panel">
+          <h2>Hola, bienvenido</h2>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h3>Mis Clases</h3>
+              <p id="teacherClassCount">0</p>
+            </div>
+          </div>
+          
+          <h3>Temas pendientes</h3>
+          <ul id="pendingTopics" class="list"></ul>
+
+          <h3>Actividad reciente</h3>
+          <ul id="teacherActivities" class="list"></ul>
+        </section>
+
+        <!-- Teacher Students (Asistencias) -->
+        <section id="teacher-students" class="panel" hidden>
+          <h2>Lista de alumnos</h2>
+          <div class="form-inline">
+            <label for="attClass">Clase</label>
+            <select id="attClass"></select>
+            <input type="date" id="attDate" />
+            <button id="attLoad" class="btn">Cargar</button>
+            <button id="attSave" class="btn primary">
+              Guardar asistencias
+            </button>
+          </div>
+          <div id="attMsg" class="muted" style="margin-top: 8px"></div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Alumno</th>
+                <th>Asistencia</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceTable"></tbody>
+          </table>
+        </section>
+
+        <!-- Teacher Grades -->
+        <section id="teacher-grades" class="panel" hidden>
+          <h2>Registro de calificaciones</h2>
+          <div class="form-inline">
+            <label for="grClass">Clase</label>
+            <select id="grClass"></select>
+            <label for="grEval">Evaluaci├│n</label>
+            <input id="grEval" type="text" placeholder="Final" />
+            <button id="grLoad" class="btn">Cargar</button>
+            <button id="grSave" class="btn primary">Guardar cambios</button>
+          </div>
+          <div id="grMsg" class="muted" style="margin-top: 8px"></div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Alumno</th>
+                <th>Calificaci├│n</th>
+              </tr>
+            </thead>
+            <tbody id="gradesTable"></tbody>
+          </table>
+        </section>
+      </main>
+    </section>
+
+    <!-- Panel ALUMNO -->
+    <section id="studentDashboard" class="view" hidden>
+      <header class="topbar">
+        <div class="brand">
+          <img src="assets/logo.png" alt="SAGE Logo" class="logo-topbar" />
+          Portal del Alumno
+        </div>
+        <nav class="menu">
+          <button class="link" data-student="home">Inicio</button>
+          <button class="link" data-student="academics">Acad├®mico</button>
+          <button class="link" data-student="schedule">Horario</button>
+        </nav>
+        <label class="switch">
+          <input type="checkbox" data-theme-toggle>
+          <span class="slider"></span>
+        </label>
+        <button id="logoutStudent" class="btn">Cerrar sesi├│n</button>
+      </header>
+
+      <main class="content">
+        <!-- Student Home -->
+        <section id="student-home" class="panel">
+          <div class="welcome-banner">
+            <h2>Bienvenido, <span id="studentWelcomeName">-</span></h2>
+            <p>Aqu├¡ puedes consultar tu progreso acad├®mico y horarios.</p>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h3>Materias Inscritas</h3>
+              <p id="studentSubjectCount">0</p>
+            </div>
+            <div class="stat-card">
+              <h3>Promedio General</h3>
+              <p id="studentOverallAvg">-</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Student Academics (Calificaciones/Clases) -->
+        <section id="student-academics" class="panel" hidden>
+          <h2>Mis Clases y Calificaciones</h2>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Materia</th>
+                <th>Profesor</th>
+                <th>Periodo</th>
+                <th>Calificaci├│n</th>
+              </tr>
+            </thead>
+            <tbody id="studentGradesTable"></tbody>
+          </table>
+        </section>
+
+        <!-- Student Schedule -->
+        <section id="student-schedule" class="panel" hidden>
+          <h2>Mi Horario Escolar</h2>
+          <div id="studentScheduleContent">
+            <p class="muted">El horario se est├í cargando o no hay clases registradas.</p>
+          </div>
+        </section>
+      </main>
+    </section>
+
+    <script src="js/app-common.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+      // Custom Cursor Logic
+      const cursor = document.querySelector('.custom-cursor');
+      const follower = document.querySelector('.custom-cursor-follower');
+      
+      let mouseX = 0, mouseY = 0;
+      let followerX = 0, followerY = 0;
+      
+      document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        
+        // Update main cursor immediately
+        cursor.style.left = mouseX + 'px';
+        cursor.style.top = mouseY + 'px';
+      });
+      
+      // Smooth follow effect for the outer circle
+      function animate() {
+        followerX += (mouseX - followerX) * 0.1;
+        followerY += (mouseY - followerY) * 0.1;
+        
+        follower.style.left = followerX + 'px';
+        follower.style.top = followerY + 'px';
+        
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      // Add hover effect for interactive elements
+      const interactives = document.querySelectorAll('button, a, input, select, textarea, [role="button"], summary');
+      interactives.forEach(el => {
+        el.addEventListener('mouseenter', () => {
+          cursor.classList.add('hover');
+          follower.classList.add('hover');
+        });
+        el.addEventListener('mouseleave', () => {
+          cursor.classList.remove('hover');
+          follower.classList.remove('hover');
+        });
+      });
+      
+      // Update interactive elements list dynamically (e.g., after loading tables)
+      const observer = new MutationObserver(() => {
+        const newInteractives = document.querySelectorAll('button:not([data-cursor-bound]), a:not([data-cursor-bound]), input:not([data-cursor-bound]), select:not([data-cursor-bound]), textarea:not([data-cursor-bound]), summary:not([data-cursor-bound])');
+        newInteractives.forEach(el => {
+          el.setAttribute('data-cursor-bound', 'true');
+          el.addEventListener('mouseenter', () => {
+            cursor.classList.add('hover');
+            follower.classList.add('hover');
+          });
+          el.addEventListener('mouseleave', () => {
+            cursor.classList.remove('hover');
+            follower.classList.remove('hover');
+          });
+        });
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    </script>
+  </body>
+</html>

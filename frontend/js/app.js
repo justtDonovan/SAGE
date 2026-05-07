@@ -52,13 +52,17 @@ const session = {
   get userName() { return sessionStorage.getItem('userName'); },
   get teacherId() { return sessionStorage.getItem('teacherId') ? Number(sessionStorage.getItem('teacherId')) : null; },
   get studentId() { return sessionStorage.getItem('studentId') ? Number(sessionStorage.getItem('studentId')) : null; },
-  clear() { sessionStorage.clear(); },
+  clear() { 
+    sessionStorage.clear(); 
+    localStorage.removeItem('app_state'); // Opcional: limpiar también estado persistente
+    window.location.href = 'index.html'; 
+  },
 };
 
 // Utilidades
 const byId = (id) => document.getElementById(id);
-const show = (el) => el.removeAttribute('hidden');
-const hide = (el) => el.setAttribute('hidden', '');
+const show = (el) => el?.removeAttribute('hidden');
+const hide = (el) => el?.setAttribute('hidden', '');
 const fmtMoney = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
 
 // Tema (modo nocturno / modo normal)
@@ -241,59 +245,72 @@ if (registerForm) {
       show(loginForm);
     } catch (err) {
       console.error(err);
-      registerError.textContent = 'Error de conexión con el servidor';
-      show(registerError);
+      if (registerError) {
+        registerError.textContent = 'Error de conexión con el servidor';
+        show(registerError);
+      }
     }
   };
 }
 
-loginForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const username = byId('username').value.trim();
-  const password = byId('password').value.trim();
+if (loginForm) {
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = byId('username').value.trim();
+    const password = byId('password').value.trim();
 
-  try {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      loginError.textContent = data.error || 'Error al iniciar sesión';
-      show(loginError);
-      return;
+      if (!res.ok) {
+        if (loginError) {
+          loginError.textContent = data.error || 'Error al iniciar sesión';
+          show(loginError);
+        }
+        return;
+      }
+
+      // Login exitoso
+      const { token, user } = data;
+      
+      // Guardar sesión
+      sessionStorage.setItem('token', token);
+      sessionStorage.setItem('role', user.role);
+      sessionStorage.setItem('userId', user.id);
+      sessionStorage.setItem('userName', `${user.first_name} ${user.last_name}`);
+      sessionStorage.setItem('userFirstName', user.first_name);
+      sessionStorage.setItem('userLastName', user.last_name);
+      
+      if (user.role === 'teacher') {
+        sessionStorage.setItem('teacherId', user.teacherId);
+      } else if (user.role === 'student') {
+        sessionStorage.setItem('studentId', user.studentId);
+      }
+
+      if (loginError) hide(loginError);
+      loginForm.reset();
+      
+      // Redirección real según el rol
+      if (user.role === 'admin') window.location.href = 'dashboard-admin.html';
+      else if (user.role === 'teacher') window.location.href = 'dashboard-profesor.html';
+      else if (user.role === 'student') window.location.href = 'dashboard-alumno.html';
+      else renderApp();
+
+    } catch (err) {
+      console.error(err);
+      if (loginError) {
+        loginError.textContent = 'Error de conexión con el servidor';
+        show(loginError);
+      }
     }
-
-    // Login exitoso
-    const { token, user } = data;
-    
-    // Guardar sesión
-    sessionStorage.setItem('token', token);
-    sessionStorage.setItem('role', user.role);
-    sessionStorage.setItem('userId', user.id);
-    sessionStorage.setItem('userName', `${user.first_name} ${user.last_name}`);
-    sessionStorage.setItem('userFirstName', user.first_name);
-    sessionStorage.setItem('userLastName', user.last_name);
-    
-    if (user.role === 'teacher') {
-      sessionStorage.setItem('teacherId', user.teacherId);
-    } else if (user.role === 'student') {
-      sessionStorage.setItem('studentId', user.studentId);
-    }
-
-    hide(loginError);
-    loginForm.reset();
-    renderApp();
-
-  } catch (err) {
-    console.error(err);
-    loginError.textContent = 'Error de conexión con el servidor';
-    show(loginError);
-  }
-});
+  });
+}
 
 // Navegación Alumno
 document.querySelectorAll('[data-student]').forEach((btn) => {
@@ -334,9 +351,13 @@ document.querySelectorAll('[data-admin]').forEach((btn) => {
 });
 
 // Logout
-byId('logoutAdmin').addEventListener('click', () => { session.clear(); renderApp(); });
-byId('logoutTeacher').addEventListener('click', () => { session.clear(); renderApp(); });
-byId('logoutStudent').addEventListener('click', () => { session.clear(); renderApp(); });
+const logoutAdminBtn = byId('logoutAdmin');
+const logoutTeacherBtn = byId('logoutTeacher');
+const logoutStudentBtn = byId('logoutStudent');
+
+if (logoutAdminBtn) logoutAdminBtn.addEventListener('click', () => { session.clear(); renderApp(); });
+if (logoutTeacherBtn) logoutTeacherBtn.addEventListener('click', () => { session.clear(); renderApp(); });
+if (logoutStudentBtn) logoutStudentBtn.addEventListener('click', () => { session.clear(); renderApp(); });
 
 // Render principal
 function renderApp() {
@@ -346,29 +367,51 @@ function renderApp() {
   const teacherView = byId('teacherDashboard');
   const studentView = byId('studentDashboard');
 
-  if (!role) {
+  const path = window.location.pathname;
+
+  // Si estamos en la raíz (index.html), forzamos el login limpiando sesión previa
+  if (path === '/' || path.endsWith('index.html')) {
+    sessionStorage.clear();
     show(loginView);
     hide(adminView);
     hide(teacherView);
     hide(studentView);
     return;
   }
+
+  if (!role) {
+    // Si no estamos en la raíz y no hay sesión, mandamos a la raíz
+    window.location.href = 'index.html';
+    return;
+  }
   
   hide(loginView);
   
   if (role === 'admin') {
+    if (!path.includes('dashboard-admin')) {
+        window.location.href = 'dashboard-admin.html';
+        return;
+    }
     show(adminView);
     hide(teacherView);
     hide(studentView);
     const activeAdminSection = document.querySelector('#adminDashboard .panel:not([hidden])');
     if (!activeAdminSection) document.querySelector('[data-admin="home"]').click();
   } else if (role === 'teacher') {
+    if (!path.includes('dashboard-profesor')) {
+        window.location.href = 'dashboard-profesor.html';
+        return;
+    }
     show(teacherView);
     hide(adminView);
     hide(studentView);
     const activeTeacherSection = document.querySelector('#teacherDashboard .panel:not([hidden])');
     if (!activeTeacherSection) document.querySelector('[data-teacher="home"]').click();
   } else if (role === 'student') {
+    if (!path.includes('dashboard-alumno')) {
+        window.location.href = 'dashboard-alumno.html';
+        return;
+    }
     show(studentView);
     hide(adminView);
     hide(teacherView);
@@ -1029,26 +1072,61 @@ function openPrintWindow(title, contentHtml) {
 
 // Teacher Home
 async function renderTeacherHome() {
-  const teacherId = sessionStorage.getItem('userId');
+  const teacherId = session.userId;
   
   try {
     const res = await fetch('/api/classes');
     if (res.ok) {
       const allClasses = await res.json();
       const teacherClasses = allClasses.filter(cl => cl.teacher_id == teacherId);
-      byId('teacherClassCount').textContent = teacherClasses.length;
+      const countEl = byId('teacherClassCount');
+      if (countEl) countEl.textContent = teacherClasses.length;
+
+      // Calcular total de alumnos únicos en sus clases
+      let totalStudents = new Set();
+      let totalGrades = 0;
+      let gradesCount = 0;
+
+      for (const cl of teacherClasses) {
+        const studentsRes = await fetch(`/api/students/class/${cl.id}`);
+        if (studentsRes.ok) {
+          const students = await studentsRes.json();
+          students.forEach(s => totalStudents.add(s.id));
+        }
+        
+        const gradesRes = await fetch(`/api/grades/class/${cl.id}`);
+        if (gradesRes.ok) {
+          const grades = await gradesRes.json();
+          grades.forEach(g => {
+            totalGrades += Number(g.grade);
+            gradesCount++;
+          });
+        }
+      }
+
+      const studentCountEl = byId('teacherStudentCount');
+      if (studentCountEl) studentCountEl.textContent = totalStudents.size;
+
+      const avgEl = byId('teacherAvgGrade');
+      if (avgEl) {
+        avgEl.textContent = gradesCount > 0 ? (totalGrades / gradesCount).toFixed(1) : '0.0';
+      }
     }
   } catch (err) { console.error(err); }
 
   const ulP = byId('pendingTopics');
-  ulP.innerHTML = [
-    'Repasar conceptos de programación funcional',
-    'Entrega de proyecto parcial',
-  ].map(t => `<li>${t}</li>`).join('');
+  if (ulP) {
+    ulP.innerHTML = [
+      'Revisar exámenes de la Unidad 2',
+      'Subir calificaciones del primer parcial',
+      'Preparar material para clase de mañana',
+    ].map(t => `<li>${t}</li>`).join('');
+  }
 
   const ulA = byId('teacherActivities');
-  ulA.innerHTML = '';
-  // Actividades pueden seguir siendo locales o mixtas, por ahora solo limpiar si no hay backend de logs
+  if (ulA) {
+    ulA.innerHTML = '<li>Inicio de sesión exitoso</li><li>Sincronización de datos completada</li>';
+  }
 }
 
 // Teacher Students - Attendance
@@ -1233,7 +1311,8 @@ function renderTeacherGrades() {
 async function renderStudentHome() {
   const name = session.userName;
   const sid = session.studentId;
-  byId('studentWelcomeName').textContent = name;
+  const welcomeEl = byId('studentWelcomeName');
+  if (welcomeEl) welcomeEl.textContent = name;
 
   if (!sid) return;
 
@@ -1241,17 +1320,26 @@ async function renderStudentHome() {
     // 1. Materias inscritas
     const clRes = await fetch(`/api/classes/student/${sid}`);
     const classes = clRes.ok ? await clRes.json() : [];
-    byId('studentSubjectCount').textContent = classes.length;
+    const countEl = byId('studentClassCount');
+    if (countEl) countEl.textContent = classes.length;
 
     // 2. Promedio general (desde grades)
     const grRes = await fetch(`/api/grades/student/${sid}`);
     const grades = grRes.ok ? await grRes.json() : [];
-    if (grades.length) {
-      const avg = grades.reduce((acc, curr) => acc + Number(curr.grade), 0) / grades.length;
-      byId('studentOverallAvg').textContent = avg.toFixed(2);
-    } else {
-      byId('studentOverallAvg').textContent = '-';
+    const gpaEl = byId('studentGPA');
+    if (gpaEl) {
+      if (grades.length) {
+        const avg = grades.reduce((acc, curr) => acc + Number(curr.grade), 0) / grades.length;
+        gpaEl.textContent = avg.toFixed(1);
+      } else {
+        gpaEl.textContent = '0.0';
+      }
     }
+
+    // 3. Asistencia (Placeholder)
+    const attEl = byId('studentAttendance');
+    if (attEl) attEl.textContent = '100%'; // Por ahora estático o implementar fetch
+
   } catch (err) { console.error(err); }
 }
 
@@ -1337,6 +1425,10 @@ async function renderStudentSchedule() {
     }
   } catch (err) { console.error(err); }
 }
+function persist() {
+  localStorage.setItem('app_state', JSON.stringify(state));
+}
+
 function loadPersisted() {
   const raw = localStorage.getItem('app_state');
   if (raw) {

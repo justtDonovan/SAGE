@@ -69,6 +69,10 @@ html[data-theme="light"] {
   padding: 0;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html, body {
   height: 100%;
   width: 100%;
@@ -285,6 +289,36 @@ input, select, textarea {
   font-family: var(--font-main);
   font-size: 1rem;
   transition: all var(--transition-fast);
+}
+
+/* Redesigned dropdown for registration role */
+#regRole {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, transparent 50%),
+                    linear-gradient(135deg, transparent 50%, transparent 50%),
+                    linear-gradient(to right, rgba(255,255,255,0.02), rgba(255,255,255,0.02));
+  background-position: calc(100% - 1.5rem) calc(1em + 2px), calc(100% - .9rem) calc(1em + 2px), 0 0;
+  background-size: .45rem .45rem, .45rem .45rem, 100% 100%;
+  background-repeat: no-repeat;
+  padding-right: 3rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+#regRole:focus {
+  box-shadow: 0 0 0 4px rgba(34,197,94,0.12);
+  border-color: var(--accent-primary);
+}
+
+/* Small arrow using pseudo-element on parent to avoid affecting native option list */
+.login-card form label[for="regRole"] + #regRole {
+  position: relative;
+}
+.login-card form label[for="regRole"] + #regRole::after {
+  content: '';
 }
 
 html[data-theme="light"] input, 
@@ -782,6 +816,193 @@ html[data-theme="light"] details.form-card summary {
 
 details.form-card summary::-webkit-details-marker {
   display: none;
+}
+
+/* ========== SELECCIÓN DE ROLES ========== */
+.role-selection {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.role-selection-card {
+  width: 100%;
+  max-width: 900px;
+  padding: 3rem;
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), 0 0 40px rgba(0,0,0,0.2);
+  position: relative;
+  overflow: hidden;
+  animation: slideIn scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.role-selection-card h1 {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, var(--text-primary), var(--accent-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.role-selection-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.role-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.role-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all var(--transition-normal);
+  cursor: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.role-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1), transparent);
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.role-button:hover {
+  border-color: var(--accent-primary);
+  background: rgba(59, 130, 246, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.role-button:hover::before {
+  opacity: 1;
+}
+
+.role-button.admin {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.role-button.admin:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+.role-button.teacher {
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.role-button.teacher:hover {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: #22c55e;
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+}
+
+.role-button.student {
+  border-color: rgba(168, 85, 247, 0.3);
+}
+
+.role-button.student:hover {
+  background: rgba(168, 85, 247, 0.1);
+  border-color: #a855f7;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+}
+
+.role-icon {
+  font-size: 3rem;
+  transition: transform var(--transition-normal);
+}
+
+.role-button:hover .role-icon {
+  transform: scale(1.2) rotate(-5deg);
+}
+
+.role-button h2 {
+  font-size: 1.5rem;
+  margin: 0;
+  margin-bottom: 0.5rem;
+}
+
+.role-button p {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin: 0;
+}
+
+/* ========== LOGIN ESPECÍFICOS POR ROL ========== */
+.login-card.admin-login {
+  border-top: 3px solid rgba(59, 130, 246, 0.5);
+}
+
+.login-card.teacher-login {
+  border-top: 3px solid rgba(34, 197, 94, 0.5);
+}
+
+.login-card.student-login {
+  border-top: 3px solid rgba(168, 85, 247, 0.5);
+}
+
+.login-subtitle {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
+}
+
+.login-footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.button-link {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--accent-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all var(--transition-fast);
+  cursor: none;
+}
+
+.button-link:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: var(--accent-primary);
+  color: var(--accent-hover);
 }
 
 details.form-card summary::after {

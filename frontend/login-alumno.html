@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema Escolar - Login Alumno</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Custom Cursor -->
+    <div class="custom-cursor"></div>
+    <div class="custom-cursor-follower"></div>
+
+    <!-- Login -->
+    <section id="login" class="view">
+      <div class="login-card student-login">
+        <img src="assets/logo.png" alt="SAGE Logo" class="logo-login" />
+        <h1>Alumno</h1>
+        <p class="login-subtitle">Sistema de Gestión Escolar</p>
+
+        <form id="loginForm">
+          <label for="username">Usuario</label>
+          <input
+            type="text"
+            id="username"
+            placeholder="Tu usuario de alumno"
+            required
+          />
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" placeholder="12345" required />
+          <button type="submit" id="loginBtn" class="button">
+            Ingresar
+          </button>
+          <div id="loginError" class="error" hidden></div>
+          <button
+            type="button"
+            id="showRegisterBtn"
+            class="button success"
+            style="margin-top: 0.5rem;"
+          >
+            Registrarse como alumno
+          </button>
+        </form>
+
+        <form id="registerForm" hidden>
+          <div style="margin-bottom: 1rem; text-align: center">
+            <strong>Registro de Alumno</strong>
+          </div>
+           <div id="registerError" class="error" hidden></div>
+          <label for="regFirstName">Nombre</label>
+          <input
+            type="text"
+            id="regFirstName"
+            placeholder="Ej. Juan"
+            required
+          />
+          
+          <label for="regLastName">Apellido(s)</label>
+          <input
+            type="text"
+            id="regLastName"
+            placeholder="Ej. Pérez García"
+            required
+          />
+
+          <label for="regCareer">Carrera</label>
+          <select id="regCareer">
+            <!-- Se llenará dinámicamente -->
+          </select>
+          
+          <label for="regSemester">Semestre</label>
+          <input type="number" id="regSemester" min="1" max="12" placeholder="1" />
+
+          <label for="regUsername">Usuario</label>
+          <input
+            type="text"
+            id="regUsername"
+            placeholder="Usuario único"
+            required
+          />
+
+          <label for="regPassword">Contraseña</label>
+          <input
+            type="password"
+            id="regPassword"
+            placeholder="Contraseña segura"
+            required
+          />
+
+          <button type="submit" class="button success">Registrarse</button>
+          <button
+            type="button"
+            id="cancelRegisterBtn"
+            class="button"
+            style="margin-top: 0.5rem;"
+          >
+            Cancelar
+          </button>
+        </form>
+
+        <div class="login-footer">
+          <a href="index.html" class="button-link">← Volver a seleccionar rol</a>
+        </div>
+      </div>
+    </section>
+
+    <script src="js/app-common.js"></script>
+    <script src="js/login-alumno.js"></script>
+  </body>
+</html>

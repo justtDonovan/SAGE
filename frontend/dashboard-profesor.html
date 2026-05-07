@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema Escolar - Panel Profesor</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Custom Cursor -->
+    <div class="custom-cursor"></div>
+    <div class="custom-cursor-follower"></div>
+
+    <!-- Panel PROFESOR -->
+    <section id="teacherDashboard" class="view">
+      <header class="topbar">
+        <div class="brand">
+          <img src="assets/logo.png" alt="SAGE Logo" class="logo-topbar" />
+          Profesor
+        </div>
+        <nav class="menu">
+          <button class="link" data-teacher="home">Inicio</button>
+          <button class="link" data-teacher="students">Mis Alumnos</button>
+          <button class="link" data-teacher="grades">Calificaciones</button>
+        </nav>
+        <label class="switch">
+          <input type="checkbox" data-theme-toggle>
+          <span class="slider"></span>
+        </label>
+        <button id="logoutTeacher" class="btn">Cerrar sesión</button>
+      </header>
+
+      <main class="content">
+        <!-- Teacher Home -->
+        <section id="teacher-home" class="panel">
+          <h2>Bienvenido, Profesor</h2>
+          <div class="stats-grid">
+            <div class="stat">
+              <div class="value" id="teacherClassCount">0</div>
+              <div class="label">Mis Clases</div>
+            </div>
+            <div class="stat">
+              <div class="value" id="teacherStudentCount">0</div>
+              <div class="label">Total de Alumnos</div>
+            </div>
+            <div class="stat">
+              <div class="value" id="teacherAvgGrade">0.0</div>
+              <div class="label">Calificación Promedio</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Teacher Students -->
+        <section id="teacher-students" class="panel" hidden>
+          <div class="panel-header">
+            <h2>Mis Alumnos</h2>
+          </div>
+          <div class="panel-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Carrera</th>
+                  <th>Semestre</th>
+                  <th>Clase</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="teacherStudentsTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Teacher Grades -->
+        <section id="teacher-grades" class="panel" hidden>
+          <div class="panel-header">
+            <h2>Registro de Calificaciones</h2>
+          </div>
+          <div class="panel-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Alumno</th>
+                  <th>Clase</th>
+                  <th>Evaluación</th>
+                  <th>Calificación</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="gradesTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </section>
+
+    <script src="js/app.js"></script>
+    <script>
+      // Custom Cursor Logic
+      const cursor = document.querySelector('.custom-cursor');
+      const follower = document.querySelector('.custom-cursor-follower');
+      
+      let mouseX = 0, mouseY = 0;
+      let followerX = 0, followerY = 0;
+      
+      document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        
+        cursor.style.left = mouseX + 'px';
+        cursor.style.top = mouseY + 'px';
+      });
+      
+      function animate() {
+        followerX += (mouseX - followerX) * 0.12;
+        followerY += (mouseY - followerY) * 0.12;
+        
+        follower.style.left = followerX + 'px';
+        follower.style.top = followerY + 'px';
+        
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      const observer = new MutationObserver(() => {
+        const interactives = document.querySelectorAll('button, a, input, select, textarea, [role="button"], summary');
+        interactives.forEach(el => {
+          if (el.dataset.cursorBound) return;
+          el.dataset.cursorBound = "true";
+          el.addEventListener('mouseenter', () => {
+            cursor.classList.add('hover');
+            follower.classList.add('hover');
+          });
+          el.addEventListener('mouseleave', () => {
+            cursor.classList.remove('hover');
+            follower.classList.remove('hover');
+          });
+        });
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    </script>
+  </body>
+</html>

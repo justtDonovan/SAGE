@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema Escolar - Panel Administrador</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Custom Cursor -->
+    <div class="custom-cursor"></div>
+    <div class="custom-cursor-follower"></div>
+
+    <!-- Panel ADMINISTRADOR -->
+    <section id="adminDashboard" class="view">
+      <header class="topbar">
+        <div class="brand">
+          <img src="assets/logo.png" alt="SAGE Logo" class="logo-topbar" />
+          Administrador
+        </div>
+        <nav class="menu">
+          <button class="link" data-admin="home">Inicio</button>
+          <button class="link" data-admin="students">Alumnos</button>
+          <button class="link" data-admin="teachers">Profesores</button>
+          <button class="link" data-admin="classes">Clases</button>
+          <button class="link" data-admin="reports">Reportes</button>
+        </nav>
+        <label class="switch">
+          <input type="checkbox" data-theme-toggle>
+          <span class="slider"></span>
+        </label>
+        <button id="logoutAdmin" class="btn">Cerrar sesión</button>
+      </header>
+
+      <main class="content">
+        <!-- Admin Home -->
+        <section id="admin-home" class="panel">
+          <h2>Resumen</h2>
+          <div class="stats-grid">
+            <div class="stat">
+              <div class="value" id="countStudents">0</div>
+              <div class="label">Alumnos</div>
+            </div>
+            <div class="stat">
+              <div class="value" id="countTeachers">0</div>
+              <div class="label">Profesores</div>
+            </div>
+            <div class="stat">
+              <div class="value" id="countClasses">0</div>
+              <div class="label">Clases</div>
+            </div>
+            <div class="stat">
+              <div class="value" id="countTodayPresent">0</div>
+              <div class="label">Asistencias hoy</div>
+            </div>
+          </div>
+
+          <h3>Actividad reciente</h3>
+          <ul id="adminActivities" class="list"></ul>
+        </section>
+
+        <!-- Admin Students -->
+        <section id="admin-students" class="panel" hidden>
+          <div class="panel-header">
+            <h2>Alumnos</h2>
+            <button id="addStudentBtn" class="btn primary">Nuevo alumno</button>
+          </div>
+          <div class="panel-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Carrera</th>
+                  <th>Semestre</th>
+                  <th>Inscripción</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="studentsTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Admin Teachers -->
+        <section id="admin-teachers" class="panel" hidden>
+          <div class="panel-header">
+            <h2>Profesores</h2>
+            <button id="addTeacherBtn" class="btn primary">Nuevo profesor</button>
+          </div>
+          <div class="panel-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Edad</th>
+                  <th>Carrera Estudiada</th>
+                  <th>Especialidad</th>
+                  <th>Usuario</th>
+                  <th>Contraseña</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="teachersTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Admin Classes -->
+        <section id="admin-classes" class="panel" hidden>
+          <div class="panel-header">
+            <h2>Clases</h2>
+          </div>
+          <div class="panel-body">
+            <h3>Clases por carrera</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Carrera</th>
+                  <th>Total de clases</th>
+                </tr>
+              </thead>
+              <tbody id="classesByCareerTable"></tbody>
+            </table>
+            
+            <h3 style="margin-top: 2rem;">Todas las clases</h3>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Carrera</th>
+                  <th>Profesor</th>
+                  <th>Período</th>
+                  <th>Calificación Promedio</th>
+                </tr>
+              </thead>
+              <tbody id="classesTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Admin Reports -->
+        <section id="admin-reports" class="panel" hidden>
+          <div class="panel-header">
+            <h2>Reportes</h2>
+          </div>
+          <div class="panel-body">
+            <h3>Generar Reporte de Calificaciones</h3>
+            <div class="form-inline">
+              <select id="repClassSel"></select>
+              <input type="text" id="repEvalInput" placeholder="Tipo de evaluación (ej: Final)" />
+              <button id="btnBuildGrades" class="btn">Ver Vista Previa</button>
+              <button id="btnPdfFromPreview" class="btn primary" disabled>Generar PDF</button>
+            </div>
+            <div id="repPreview" style="margin-top: 2rem;"></div>
+          </div>
+        </section>
+      </main>
+    </section>
+
+    <script src="js/app.js"></script>
+    <script>
+      // Custom Cursor Logic
+      const cursor = document.querySelector('.custom-cursor');
+      const follower = document.querySelector('.custom-cursor-follower');
+      
+      let mouseX = 0, mouseY = 0;
+      let followerX = 0, followerY = 0;
+      
+      document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        
+        cursor.style.left = mouseX + 'px';
+        cursor.style.top = mouseY + 'px';
+      });
+      
+      function animate() {
+        followerX += (mouseX - followerX) * 0.12;
+        followerY += (mouseY - followerY) * 0.12;
+        
+        follower.style.left = followerX + 'px';
+        follower.style.top = followerY + 'px';
+        
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      const observer = new MutationObserver(() => {
+        const interactives = document.querySelectorAll('button, a, input, select, textarea, [role="button"], summary');
+        interactives.forEach(el => {
+          if (el.dataset.cursorBound) return;
+          el.dataset.cursorBound = "true";
+          el.addEventListener('mouseenter', () => {
+            cursor.classList.add('hover');
+            follower.classList.add('hover');
+          });
+          el.addEventListener('mouseleave', () => {
+            cursor.classList.remove('hover');
+            follower.classList.remove('hover');
+          });
+        });
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    </script>
+  </body>
+</html>

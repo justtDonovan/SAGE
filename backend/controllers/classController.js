@@ -35,6 +35,24 @@ const ClassController = {
     }
   },
 
+  unenroll: async (req, res) => {
+    try {
+      const { class_id, student_id } = req.body;
+      if (!class_id || !student_id) {
+        return res.status(400).json({ error: 'class_id y student_id son requeridos' });
+      }
+
+      const deletedRows = await ClassModel.unenrollStudent(class_id, student_id);
+      if (!deletedRows) {
+        return res.status(404).json({ error: 'Inscripción no encontrada' });
+      }
+
+      res.json({ message: 'Inscripción eliminada' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
   getStudentEnrollments: async (req, res) => {
     try {
       const { studentId } = req.params;
@@ -50,6 +68,26 @@ const ClassController = {
       const { id } = req.params;
       const students = await ClassModel.getStudentsByClass(id);
       res.json(students);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  update: async (req, res) => {
+    try {
+      const { id } = req.params;
+      await ClassModel.update(id, req.body);
+      res.json({ message: 'Clase actualizada' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  remove: async (req, res) => {
+    try {
+      const { id } = req.params;
+      await ClassModel.remove(id);
+      res.json({ message: 'Clase eliminada' });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

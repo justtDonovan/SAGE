@@ -101,6 +101,9 @@ function openModalWithElement(el, title = '') {
   backdrop.className = 'modal-backdrop';
   const modal = document.createElement('div');
   modal.className = 'modal';
+  if (title.toLowerCase().includes('inscribir')) {
+    modal.classList.add('modal-wide');
+  }
   const header = document.createElement('div');
   header.className = 'modal-header';
   const h = document.createElement('h3');
@@ -148,6 +151,26 @@ function openModalWithElement(el, title = '') {
 // Login
 const loginForm = byId('loginForm');
 const loginError = byId('loginError');
+
+// Mostrar/Ocultar contraseña
+const togglePasswordBtn = byId('togglePassword');
+const passwordInput = byId('password');
+const eyeIconOpen = byId('eyeIconOpen');
+const eyeIconClosed = byId('eyeIconClosed');
+
+if (togglePasswordBtn && passwordInput) {
+  togglePasswordBtn.addEventListener('click', () => {
+    const isPassword = passwordInput.getAttribute('type') === 'password';
+    passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+    if (isPassword) {
+      if (eyeIconOpen) eyeIconOpen.style.display = 'none';
+      if (eyeIconClosed) eyeIconClosed.style.display = 'block';
+    } else {
+      if (eyeIconOpen) eyeIconOpen.style.display = 'block';
+      if (eyeIconClosed) eyeIconClosed.style.display = 'none';
+    }
+  });
+}
 
 // Registro
 const registerForm = byId('registerForm');
@@ -448,9 +471,11 @@ async function renderAdminHome() {
 // Admin Students
 async function renderAdminStudents() {
   const tbody = byId('studentsTable');
+  if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="5">Cargando...</td></tr>';
   
   let students = [];
+  const formatDateInput = (value) => value ? String(value).slice(0, 10) : '';
   const careers = state.careers; // TODO: Cargar esto también con fetch
 
   // 1. Obtener datos
@@ -470,7 +495,7 @@ async function renderAdminStudents() {
     tbody.innerHTML = '<tr><td colspan="5">No hay alumnos registrados.</td></tr>';
   } else {
     tbody.innerHTML = students.map(s => {
-      const c = careers.find(c => c.id === s.career_id)?.name || '-';
+      const c = s.career_name || careers.find(c => c.id === s.career_id)?.name || '-';
       const isInactive = s.active === 0;
       const status = isInactive ? ' (Baja)' : '';
       const disableEnroll = isInactive ? 'disabled title="Alumno dado de baja"' : '';
@@ -485,7 +510,9 @@ async function renderAdminStudents() {
         <td>${date}</td>
         <td>
           <button class="btn ${isInactive ? 'baja' : ''}" data-enroll-student="${s.id}" ${disableEnroll}>Inscribir a clase</button>
+          <button class="btn" data-edit-student="${s.id}">Editar</button>
           <button class="btn" data-toggle-status="${s.id}">${toggleText}</button>
+          <button class="btn baja" data-delete-student="${s.id}">Eliminar</button>
         </td>
       </tr>`;
     }).join('');
@@ -495,6 +522,11 @@ async function renderAdminStudents() {
   const careerSel = byId('stCareer');
   if(careerSel) {
     careerSel.innerHTML = careers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  }
+
+  const editCareerSel = byId('editStCareer');
+  if(editCareerSel) {
+    editCareerSel.innerHTML = careers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
   }
 
   // 4. Configurar Formulario CREAR
@@ -522,24 +554,79 @@ async function renderAdminStudents() {
           if (window._activeModalClose) window._activeModalClose();
           form.reset();
           renderAdminStudents();
+          renderAdminHome();
         } else {
-          alert('Error al guardar alumno');
+          const data = await postRes.json();
+          alert(data.error || 'Error al guardar alumno');
         }
       } catch (err) { console.error(err); alert('Error de conexión'); }
     };
   }
 
-  // 5. Botón 'Nuevo Alumno'
-  const addStudentBtn = byId('addStudentBtn');
-  if (addStudentBtn) {
-    addStudentBtn.onclick = () => {
-      const card = byId('studentFormCard');
-      if(card) openModalWithElement(card, 'Registrar alumno');
+  // 5. Formulario de edicion
+  const editForm = byId('editStudentFormInner');
+  if (editForm) {
+    editForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const id = byId('editStudentId').value;
+      const updatedStudent = {
+        first_name: byId('editStFirstName').value.trim(),
+        last_name: byId('editStLastName').value.trim(),
+        career_id: Number(byId('editStCareer').value),
+        semester: Number(byId('editStSemester').value),
+        enrollment_date: byId('editStEnrollment').value
+      };
+
+      try {
+        const res = await fetch(`/api/students/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedStudent)
+        });
+
+        if (res.ok) {
+          alert('Alumno actualizado correctamente');
+          if (window._activeModalClose) window._activeModalClose();
+          renderAdminStudents();
+          renderAdminHome();
+        } else {
+          const data = await res.json();
+          alert(data.error || 'Error al actualizar alumno');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error de conexión');
+      }
+    };
+  }
+
+  const cancelEditBtn = byId('cancelEditStudent');
+  if (cancelEditBtn) {
+    cancelEditBtn.onclick = () => {
+      if (window._activeModalClose) window._activeModalClose();
     };
   }
 
   // 6. Eventos de la tabla (Delegación no es necesaria porque re-renderizamos)
   // Inscribir
+  tbody.querySelectorAll('[data-edit-student]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = Number(btn.getAttribute('data-edit-student'));
+      const student = students.find(s => s.id === id);
+      if (!student) return;
+
+      byId('editStudentId').value = student.id;
+      byId('editStFirstName').value = student.first_name || '';
+      byId('editStLastName').value = student.last_name || '';
+      byId('editStCareer').value = student.career_id;
+      byId('editStSemester').value = student.semester || '';
+      byId('editStEnrollment').value = formatDateInput(student.enrollment_date);
+
+      const card = byId('editStudentForm');
+      if (card) openModalWithElement(card, 'Editar alumno');
+    });
+  });
+
   tbody.querySelectorAll('[data-enroll-student]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const studentId = Number(btn.getAttribute('data-enroll-student'));
@@ -549,36 +636,87 @@ async function renderAdminStudents() {
       if (student.active === 0) { alert('Alumno dado de baja'); return; }
 
       byId('enrollStudentId').value = student.id;
-      byId('enrollStudentName').textContent = `Alumno: ${student.full_name}`;
+      byId('enrollStudentName').textContent = `Alumno: ${student.first_name} ${student.last_name}`;
       
-      // 1. Cargar clases disponibles para la carrera (desde Backend)
+      // 1. Cargar clases disponibles de la misma carrera desde Backend
       let availableClasses = [];
       try {
         const classesRes = await fetch('/api/classes');
         if (classesRes.ok) {
           const allClasses = await classesRes.json();
-          availableClasses = allClasses.filter(cl => cl.career_id === student.career_id);
+          availableClasses = allClasses.filter(cl =>
+            cl.active !== 0 && Number(cl.career_id) === Number(student.career_id)
+          );
         }
       } catch (err) { console.error('Error cargando clases:', err); }
 
       const enrollClassSel = byId('enrollClass');
-      if(enrollClassSel) enrollClassSel.innerHTML = availableClasses.map(cl => `<option value="${cl.id}">${cl.name}</option>`).join('');
+      if(enrollClassSel) {
+        enrollClassSel.innerHTML = availableClasses.length
+          ? availableClasses.map(cl => `<option value="${cl.id}">${cl.name} - ${cl.career_name || 'Sin carrera'}</option>`).join('')
+          : '<option value="">No hay clases disponibles para esta carrera</option>';
+      }
       
       // Mostrar clases inscritas (desde Backend)
       try {
         const enrollRes = await fetch(`/api/classes/student/${studentId}`);
         if (enrollRes.ok) {
           const enrolledClasses = await enrollRes.json();
+          const enrolledIds = new Set(enrolledClasses.map(cl => Number(cl.id)));
+          const notEnrolledClasses = availableClasses.filter(cl => !enrolledIds.has(Number(cl.id)));
+          if (enrollClassSel) {
+            enrollClassSel.innerHTML = notEnrolledClasses.length
+              ? notEnrolledClasses.map(cl => `<option value="${cl.id}">${cl.name} - ${cl.career_name || 'Sin carrera'}</option>`).join('')
+              : '<option value="">No hay clases disponibles para esta carrera</option>';
+          }
+
           const enrolledTable = byId('studentEnrolledClassesTable');
           if (enrolledTable) {
-            enrolledTable.innerHTML = enrolledClasses.map(cl => {
-              return `<tr><td>${cl.name}</td><td>${cl.teacher_name || 'Sin asignar'}</td><td>${cl.period || '-'}</td></tr>`;
-            }).join('');
+            enrolledTable.innerHTML = enrolledClasses.length
+              ? enrolledClasses.map(cl => `
+                <tr>
+                  <td>${cl.name}</td>
+                  <td>${cl.teacher_name || 'Sin asignar'}</td>
+                  <td>${cl.period || '-'}</td>
+                  <td><button class="btn baja" data-unenroll-class="${cl.id}">Eliminar</button></td>
+                </tr>
+              `).join('')
+              : '<tr><td colspan="4">Sin clases inscritas.</td></tr>';
+
+            enrolledTable.querySelectorAll('[data-unenroll-class]').forEach(unenrollBtn => {
+              unenrollBtn.addEventListener('click', async () => {
+                const classId = Number(unenrollBtn.getAttribute('data-unenroll-class'));
+                const enrolledClass = enrolledClasses.find(cl => Number(cl.id) === classId);
+                const ok = confirm(`Eliminar a ${student.first_name} ${student.last_name} de ${enrolledClass?.name || 'esta clase'}?`);
+                if (!ok) return;
+
+                try {
+                  const res = await fetch('/api/classes/enroll', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ class_id: classId, student_id: studentId })
+                  });
+
+                  const data = await res.json();
+                  if (res.ok) {
+                    alert('Clase eliminada del alumno');
+                    if (window._activeModalClose) window._activeModalClose();
+                    renderAdminStudents();
+                  } else {
+                    alert(data.error || 'Error al eliminar la clase');
+                  }
+                } catch (err) {
+                  console.error(err);
+                  alert('Error de conexión');
+                }
+              });
+            });
           }
         }
       } catch (err) { console.error('Error cargando inscripciones:', err); }
 
-      show(byId('enrollStudentForm'));
+      const card = byId('enrollStudentForm');
+      if (card) openModalWithElement(card, 'Inscribir alumno');
     });
   });
 
@@ -602,6 +740,32 @@ async function renderAdminStudents() {
   });
 
   // Formulario Inscripción (Cerrar conexión con Backend)
+  tbody.querySelectorAll('[data-delete-student]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = Number(btn.getAttribute('data-delete-student'));
+      const st = students.find(s => s.id === id);
+      if (!st) return;
+
+      const ok = confirm(`Eliminar definitivamente a ${st.first_name} ${st.last_name}? Esta accion tambien eliminara sus inscripciones, asistencias, calificaciones, reportes y pagos.`);
+      if (!ok) return;
+
+      try {
+        const res = await fetch(`/api/students/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          alert('Alumno eliminado correctamente');
+          renderAdminStudents();
+          renderAdminHome();
+        } else {
+          const data = await res.json();
+          alert(data.error || 'Error al eliminar alumno');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error de conexión');
+      }
+    });
+  });
+
   const enrollInner = byId('enrollStudentFormInner');
   if (enrollInner) {
       enrollInner.onsubmit = async (e) => {
@@ -623,7 +787,7 @@ async function renderAdminStudents() {
           alert('Inscripción realizada con éxito');
           // Actualizar lista de inscritas sin cerrar modal si se quiere seguir inscribiendo
           // O cerrar
-          hide(byId('enrollStudentForm'));
+          if (window._activeModalClose) window._activeModalClose();
           renderAdminStudents(); 
         } else {
           alert(data.error || 'Error al inscribir');
@@ -635,13 +799,6 @@ async function renderAdminStudents() {
     };
   }
   
-  const cancelEnroll = byId('cancelEnrollStudent');
-  if(cancelEnroll) {
-    cancelEnroll.addEventListener('click', () => {
-        hide(byId('enrollStudentForm'));
-        if(enrollInner) enrollInner.reset();
-    });
-  }
 }
 
 // Admin Teachers

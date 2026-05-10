@@ -64,12 +64,30 @@
 
         <!-- Admin Students -->
         <section id="admin-students" class="panel" hidden>
-          <div class="panel-header">
-            <h2>Alumnos</h2>
-            <button id="addStudentBtn" class="btn primary">Nuevo alumno</button>
+          <div class="panel-header students-header">
+            <div>
+              <h2>Alumnos</h2>
+              <p class="section-kicker">Registro, edicion e inscripciones</p>
+            </div>
           </div>
-          <div class="panel-body">
-            <table class="table">
+
+          <section id="studentFormCard" class="student-create-panel">
+            <div class="student-create-copy">
+              <span class="student-create-label">Alta de alumno</span>
+              <strong>Datos del expediente</strong>
+            </div>
+            <form id="studentForm">
+              <input type="text" id="stFirstName" placeholder="Nombre" required />
+              <input type="text" id="stLastName" placeholder="Apellido(s)" required />
+              <select id="stCareer" required></select>
+              <input type="number" id="stSemester" placeholder="Semestre" min="1" max="12" required />
+              <input type="date" id="stEnrollment" required />
+              <button type="submit" class="btn primary">Guardar Alumno</button>
+            </form>
+          </section>
+
+          <div class="panel-body students-table-wrap">
+            <table class="table students-table">
               <thead>
                 <tr>
                   <th>Nombre</th>
@@ -82,6 +100,45 @@
               <tbody id="studentsTable"></tbody>
             </table>
           </div>
+
+          <details id="editStudentForm" class="form-card" hidden>
+            <summary>Editar Alumno</summary>
+            <form id="editStudentFormInner">
+              <input type="hidden" id="editStudentId" />
+              <input type="text" id="editStFirstName" placeholder="Nombre" required />
+              <input type="text" id="editStLastName" placeholder="Apellido(s)" required />
+              <select id="editStCareer" required></select>
+              <input type="number" id="editStSemester" placeholder="Semestre" min="1" max="12" required />
+              <input type="date" id="editStEnrollment" required />
+              <button type="submit" class="btn primary">Guardar Cambios</button>
+              <button type="button" id="cancelEditStudent" class="btn">Cancelar</button>
+            </form>
+          </details>
+
+          <details class="form-card" id="enrollStudentForm" hidden>
+            <summary>Inscribir Alumno a Clase</summary>
+            <form id="enrollStudentFormInner">
+              <input type="hidden" id="enrollStudentId" />
+              <p id="enrollStudentName" class="bold"></p>
+              <label for="enrollClass">Clase Disponible</label>
+              <select id="enrollClass" required></select>
+              <button type="submit" class="btn primary">Confirmar inscripción</button>
+            </form>
+            <h4 style="margin-top: 1.5rem;">Clases Inscritas</h4>
+            <div class="panel-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Materia</th>
+                    <th>Profesor</th>
+                    <th>Periodo</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="studentEnrolledClassesTable"></tbody>
+              </table>
+            </div>
+          </details>
         </section>
 
         <!-- Admin Teachers -->

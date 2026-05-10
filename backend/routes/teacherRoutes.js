@@ -6,5 +6,6 @@ router.get('/', teacherController.list);
 router.post('/', teacherController.create);
 router.put('/:id', teacherController.update);
 router.patch('/:id/status', teacherController.toggleStatus);
+router.delete('/:id', teacherController.remove);
 
 module.exports = router;

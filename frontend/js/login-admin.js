@@ -15,13 +15,6 @@ if (loginForm) {
       return;
     }
 
-    // Para admin, validar que sea ADMINISTRADOR
-    if (username.toUpperCase() !== 'ADMINISTRADOR') {
-      loginError.textContent = 'Solo el administrador puede acceder por esta ruta';
-      show(loginError);
-      return;
-    }
-
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',

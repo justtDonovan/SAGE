@@ -7,8 +7,10 @@ router.get('/', studentController.list);
 
 // Crear alumno
 router.post('/', studentController.create);
+router.put('/:id', studentController.update);
 
 // Baja lógica / Reactivar
 router.patch('/:id/status', studentController.toggleStatus);
+router.delete('/:id', studentController.delete);
 
 module.exports = router;

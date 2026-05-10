@@ -30,7 +30,19 @@
             required
           />
           <label for="password">Contraseña</label>
-          <input type="password" id="password" placeholder="••••••••" required />
+          <div style="position: relative; display: flex; align-items: center; margin-bottom: 1.5rem;">
+            <input type="password" id="password" placeholder="••••••••" required style="width: 100%; padding-right: 40px; margin-bottom: 0;" />
+            <span id="togglePassword" style="position: absolute; right: 10px; cursor: pointer; color: var(--text-secondary); display: flex;" title="Mostrar/Ocultar contraseña">
+              <svg id="eyeIconOpen" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg id="eyeIconClosed" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+              </svg>
+            </span>
+          </div>
           
           <div id="loginError" class="error" hidden></div>
           
@@ -46,6 +58,9 @@
             ¿No tienes cuenta? Regístrate
           </button>
         </form>
+      </div>
+    </section>
+
 
         <form id="registerForm" hidden>
           <div style="margin-bottom: 1rem; text-align: center">
@@ -150,7 +165,6 @@
         <section id="admin-students" class="panel" hidden>
           <div class="panel-header">
             <h2>Gestión de Alumnos</h2>
-            <button id="addStudentBtn" class="btn primary" style="width: auto; margin-top: 0;">+ Nuevo Alumno</button>
           </div>
           <div class="table-container">
             <table class="table">
@@ -167,7 +181,7 @@
             </table>
           </div>
 
-          <details id="studentFormCard" class="form-card" hidden>
+          <details id="studentFormCard" class="form-card" open>
             <summary>Registrar Nuevo Alumno</summary>
             <form id="studentForm">
               <input type="text" id="stFirstName" placeholder="Nombre" required />
@@ -209,7 +223,10 @@
         <section id="admin-teachers" class="panel" hidden>
           <div class="panel-header">
             <h2>Gestión de Profesores</h2>
-            <button id="addTeacherBtn" class="btn primary" style="width: auto; margin-top: 0;">+ Nuevo Profesor</button>
+            <button id="addTeacherBtn" class="btn primary" style="width: auto; margin-top: 0; display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-weight: 600; box-shadow: 0 4px 14px rgba(0, 118, 255, 0.39); transition: all 0.2s ease; border: none; font-size: 0.95rem;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+              Nuevo Profesor
+            </button>
           </div>
           <div class="table-container">
             <table class="table">

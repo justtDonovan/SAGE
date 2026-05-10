@@ -53,6 +53,10 @@ const TeacherModel = {
 
   updateStatus: async (id, active) => {
     await pool.query('UPDATE users SET active = ? WHERE id = ? AND role = "teacher"', [active, id]);
+  },
+
+  remove: async (id) => {
+    await pool.query('DELETE FROM users WHERE id = ? AND role = "teacher"', [id]);
   }
 };
 

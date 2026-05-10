@@ -242,8 +242,10 @@ INSERT INTO careers (name) VALUES
 
 -- Usuarios (Admin y Profesores)
 -- Password para todos es: admin123  (hash generado con bcrypt)
+-- Password para Ovi es: 123
 INSERT INTO users (username, password, role, first_name, last_name, age, career_studied, specialty, hired_date) VALUES
 ('admin', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'admin', 'Administrador', 'Principal', NULL, NULL, NULL, NULL),
+('Ovi', '$2b$10$ntk9CEqLYZ13oBUjLqBfHOR75wS1kFy5i/IeI8/9fHeadvW6ZiOma', 'admin', 'Ovi', 'Administrador', NULL, NULL, NULL, NULL),
 ('roberto', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'teacher', 'Roberto', 'Martínez', 45, 'Ingeniería en Sistemas', 'Programación Web', '2024-01-05'),
 ('ana', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'teacher', 'Ana', 'Fernández', 38, 'Administración', 'Recursos Humanos', '2024-01-08');
 

@@ -39,6 +39,16 @@ const TeacherController = {
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
+  },
+
+  remove: async (req, res) => {
+    try {
+      const { id } = req.params;
+      await TeacherModel.remove(id);
+      res.json({ message: 'Profesor eliminado correctamente' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
   }
 };
 

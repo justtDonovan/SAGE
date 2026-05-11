@@ -201,6 +201,41 @@ a, button, input, select, textarea, [role="button"], summary {
   justify-content: center;
   min-height: 100vh;
   padding: 20px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+#login::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 14%, rgba(34, 211, 238, 0.08), transparent 8%),
+    radial-gradient(circle at 50% 24%, rgba(34, 211, 238, 0.06), transparent 14%),
+    radial-gradient(ellipse at 50% 40%, rgba(14, 165, 233, 0.06), transparent 28%),
+    linear-gradient(180deg, rgba(2, 6, 23, 0.02), rgba(2, 6, 23, 0.74));
+  pointer-events: none;
+  z-index: 0;
+}
+
+#login::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 1.95rem;
+  width: min(76vw, 64rem);
+  height: min(52vw, 36rem);
+  transform: translateX(-50%);
+  background:
+    linear-gradient(180deg, rgba(34, 211, 238, 0.92) 0, rgba(34, 211, 238, 0.92) 0.08rem, rgba(34, 211, 238, 0.42) 0.35rem, rgba(34, 211, 238, 0.12) 1.65rem, transparent 5rem) top center / 32% 5.2rem no-repeat,
+    radial-gradient(ellipse at 50% 0%, rgba(34, 211, 238, 0.76) 0%, rgba(34, 211, 238, 0.34) 12%, rgba(14, 165, 233, 0.12) 28%, transparent 64%) top center / 76% 16rem no-repeat,
+    linear-gradient(180deg, rgba(34, 211, 238, 0.1), rgba(34, 211, 238, 0.05) 30%, transparent 78%) center top / 56% 100% no-repeat;
+  clip-path: polygon(35% 0%, 65% 0%, 88% 100%, 12% 100%);
+  filter: blur(14px);
+  opacity: 0.82;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .login-card {
@@ -216,19 +251,20 @@ a, button, input, select, textarea, [role="button"], summary {
   position: relative;
   overflow: hidden;
   animation: slideIn scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1;
 }
 
 .login-card::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: conic-gradient(from 0deg, transparent, var(--accent-glow), transparent 30%);
-  animation: rotate 10s linear infinite;
+  inset: -30% -40% auto -40%;
+  height: 150%;
+  background:
+    conic-gradient(from 0deg, transparent, rgba(34, 211, 238, 0.04), transparent 24%, rgba(14, 165, 233, 0.04), transparent 54%, rgba(34, 211, 238, 0.06), transparent 100%),
+    radial-gradient(circle at 50% 0%, rgba(34, 211, 238, 0.08), transparent 34%);
+  animation: rotate 22s linear infinite;
   z-index: -1;
-  opacity: 0.5;
+  opacity: 0.12;
 }
 
 .login-card::after {
@@ -238,6 +274,34 @@ a, button, input, select, textarea, [role="button"], summary {
   background: var(--bg-panel);
   border-radius: calc(var(--radius-lg) - 2px);
   z-index: -1;
+}
+
+.login-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.login-card .logo-login {
+  display: block;
+  margin: 0 auto 1rem;
+  width: 96px;
+  height: auto;
+  filter: drop-shadow(0 0 18px rgba(34, 211, 238, 0.18));
+}
+
+.login-card.student-login,
+.login-card.teacher-login,
+.login-card.admin-login {
+  box-shadow:
+    0 26px 68px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 0 72px rgba(34, 211, 238, 0.04);
+}
+
+.login-card.student-login::after,
+.login-card.teacher-login::after,
+.login-card.admin-login::after {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.86), rgba(17, 24, 39, 0.76));
 }
 
 @keyframes rotate {

@@ -7,6 +7,12 @@ const showRegisterBtn = byId('showRegisterBtn');
 const cancelRegisterBtn = byId('cancelRegisterBtn');
 const registerError = byId('registerError');
 
+setupPasswordToggle('password', 'toggleLoginPassword');
+setupPasswordToggle('regPassword', 'toggleRegPassword');
+setupPasswordToggle('regConfirmPassword', 'toggleRegConfirmPassword');
+bindPasswordPolicyFeedback('regPassword', 'regPasswordPolicy');
+bindPasswordConfirmation('regPassword', 'regConfirmPassword', 'regPasswordMatch');
+
 // Cargar carreras
 async function loadCareers() {
   try {
@@ -61,9 +67,22 @@ if (registerForm) {
     const last_name = byId('regLastName').value.trim();
     const career_id = Number(byId('regCareer').value);
     const semester = Number(byId('regSemester').value) || 1;
+    const confirmPassword = byId('regConfirmPassword').value.trim();
 
     if (!username || !password || !first_name || !last_name) {
       registerError.textContent = 'Todos los campos obligatorios deben llenarse';
+      show(registerError);
+      return;
+    }
+
+    if (!isPasswordPolicyValid(password)) {
+      registerError.textContent = 'La contraseña debe tener mínimo 8 caracteres, una mayúscula y un carácter especial.';
+      show(registerError);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      registerError.textContent = 'Las contraseñas no coinciden.';
       show(registerError);
       return;
     }
@@ -127,7 +146,7 @@ if (loginForm) {
       const data = await res.json();
 
       if (!res.ok) {
-        loginError.textContent = data.error || 'Error al iniciar sesión';
+        loginError.textContent = buildLoginFeedback(data);
         show(loginError);
         return;
       }
@@ -141,6 +160,8 @@ if (loginForm) {
 
       // Login exitoso
       const { token, user } = data;
+
+      alert(buildLoginFeedback(data));
       
       // Guardar sesión
       sessionStorage.setItem('token', token);

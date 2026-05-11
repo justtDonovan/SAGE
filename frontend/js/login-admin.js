@@ -3,6 +3,8 @@
 const loginForm = byId('loginForm');
 const loginError = byId('loginError');
 
+setupPasswordToggle('password', 'toggleLoginPassword');
+
 if (loginForm) {
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -11,13 +13,6 @@ if (loginForm) {
 
     if (!username || !password) {
       loginError.textContent = 'Por favor completa todos los campos';
-      show(loginError);
-      return;
-    }
-
-    // Para admin, validar que sea ADMINISTRADOR
-    if (username.toUpperCase() !== 'ADMINISTRADOR') {
-      loginError.textContent = 'Solo el administrador puede acceder por esta ruta';
       show(loginError);
       return;
     }
@@ -32,7 +27,7 @@ if (loginForm) {
       const data = await res.json();
 
       if (!res.ok) {
-        loginError.textContent = data.error || 'Error al iniciar sesión';
+        loginError.textContent = buildLoginFeedback(data);
         show(loginError);
         return;
       }
@@ -46,6 +41,8 @@ if (loginForm) {
 
       // Login exitoso
       const { token, user } = data;
+
+      alert(buildLoginFeedback(data));
       
       // Guardar sesión
       sessionStorage.setItem('token', token);

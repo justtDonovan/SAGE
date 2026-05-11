@@ -23,6 +23,7 @@ const attendanceRoutes = require("./routes/attendanceRoutes");
 const gradeRoutes = require("./routes/gradeRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
 const statRoutes = require("./routes/statRoutes");
+const careerRoutes = require("./routes/careerRoutes");
 
 // Usar rutas API
 app.use("/api/auth", authRoutes);
@@ -33,6 +34,7 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/grades", gradeRoutes);
 app.use("/api/schedules", scheduleRoutes);
 app.use("/api/stats", statRoutes);
+app.use("/api/careers", careerRoutes);
 
 // Ruta principal para health check
 app.get("/api/health", (req, res) => {

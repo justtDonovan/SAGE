@@ -71,6 +71,7 @@ CREATE TABLE classes (
   career_id INT NOT NULL,
   teacher_id INT,
   period VARCHAR(20), -- ej. 2024A
+  group_name VARCHAR(20), -- ej. G-1
   average_grade DECIMAL(4,2),
   active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -144,7 +145,7 @@ CREATE TABLE grades (
   id INT AUTO_INCREMENT PRIMARY KEY,
   class_id INT NOT NULL,
   student_id INT NOT NULL,
-  evaluation VARCHAR(50) NOT NULL DEFAULT 'Final',
+  evaluation VARCHAR(50) NOT NULL DEFAULT 'Periodo 3',
   grade DECIMAL(4,2) NOT NULL,
   recorded_by_teacher_id INT,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -254,9 +255,9 @@ INSERT INTO students (first_name, last_name, career_id, semester, enrollment_dat
 ('Carlos', 'Rodríguez Martín', 3, 2, '2024-01-15');
 
 -- Clases (teacher_id ahora es user_id: 2 y 3)
-INSERT INTO classes (name, career_id, teacher_id, period, average_grade) VALUES
-('Programación Web I', 1, 2, '2024A', 8.50),
-('Administración de Empresas', 2, 3, '2024A', 8.20);
+INSERT INTO classes (name, career_id, teacher_id, period, group_name, average_grade) VALUES
+('Programación Web I', 1, 2, '2024A', 'G-1', 8.50),
+('Administración de Empresas', 2, 3, '2024A', 'G-2', 8.20);
 
 -- Inscripciones
 INSERT INTO enrollments (class_id, student_id, enrollment_date) VALUES
@@ -272,9 +273,9 @@ INSERT INTO attendance (class_id, student_id, attendance_date, status, recorded_
 
 -- Calificaciones
 INSERT INTO grades (class_id, student_id, evaluation, grade, recorded_by_teacher_id) VALUES
-(1, 1, 'Final', 9.0, 2),
-(1, 3, 'Final', 7.5, 2),
-(2, 2, 'Final', 8.0, 3);
+(1, 1, 'Periodo 1', 9.0, 2),
+(1, 3, 'Periodo 1', 7.5, 2),
+(2, 2, 'Periodo 1', 8.0, 3);
 
 -- Reportes
 INSERT INTO reports (student_id, teacher_id, class_id, report_type, title, description) VALUES

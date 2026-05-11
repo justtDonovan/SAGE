@@ -20,6 +20,20 @@ const StudentModel = {
     return res.insertId;
   },
 
+  update: async (id, data) => {
+    const { first_name, last_name, career_id, semester, enrollment_date } = data;
+    await pool.query(
+      `UPDATE students
+       SET first_name = ?, last_name = ?, career_id = ?, semester = ?, enrollment_date = ?
+       WHERE id = ?`,
+      [first_name, last_name, career_id, semester, enrollment_date, id]
+    );
+  },
+
+  remove: async (id) => {
+    await pool.query('DELETE FROM students WHERE id = ?', [id]);
+  },
+
   getByUserId: async (user_id) => {
     const [rows] = await pool.query('SELECT * FROM students WHERE user_id = ?', [user_id]);
     return rows[0];
@@ -32,6 +46,17 @@ const StudentModel = {
   getById: async (id) => {
     const [rows] = await pool.query('SELECT * FROM students WHERE id = ?', [id]);
     return rows[0];
+  },
+
+  getByClass: async (class_id) => {
+    const [rows] = await pool.query(`
+      SELECT s.*
+      FROM students s
+      JOIN enrollments e ON s.id = e.student_id
+      WHERE e.class_id = ?
+      ORDER BY s.last_name, s.first_name
+    `, [class_id]);
+    return rows;
   }
 };
 

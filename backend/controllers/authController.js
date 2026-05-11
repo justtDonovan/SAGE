@@ -2,6 +2,12 @@ const UserModel = require('../models/userModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+const PASSWORD_POLICY_REGEX = /^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$/;
+
+function isValidPasswordPolicy(password) {
+  return PASSWORD_POLICY_REGEX.test(password || '');
+}
+
 const AuthController = {
   login: async (req, res) => {
     try {
@@ -15,15 +21,22 @@ const AuthController = {
       const user = await UserModel.findByUsername(username);
 
       if (!user) {
-        // Para seguridad, siempre responder genérico o verificar.
-        return res.status(401).json({ error: 'Credenciales inválidas' });
+        return res.status(401).json({
+          error: 'Usuario incorrecto. Contraseña incorrecta.',
+          username_correct: false,
+          password_correct: false
+        });
       }
 
       // Comparar contraseña
       const match = await bcrypt.compare(password, user.password);
 
       if (!match) {
-        return res.status(401).json({ error: 'Credenciales inválidas' });
+        return res.status(401).json({
+          error: 'Usuario correcto. Contraseña incorrecta.',
+          username_correct: true,
+          password_correct: false
+        });
       }
 
       // Generar Token JWT
@@ -47,6 +60,8 @@ const AuthController = {
 
       res.json({
         message: 'Login exitoso',
+        username_correct: true,
+        password_correct: true,
         token,
         user: {
           id: user.id,
@@ -71,6 +86,17 @@ const AuthController = {
       // Validaciones básicas
       if (!username || !password || !first_name || !last_name) {
         return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+      }
+
+      if (!isValidPasswordPolicy(password)) {
+        return res.status(400).json({
+          error: 'La contraseña debe tener mínimo 8 caracteres, al menos una mayúscula y al menos un carácter especial.'
+        });
+      }
+
+      const allowedRoles = ['student', 'teacher', 'admin'];
+      if (role && !allowedRoles.includes(role)) {
+        return res.status(400).json({ error: 'Rol inválido' });
       }
 
       // Verificar si el usuario ya existe

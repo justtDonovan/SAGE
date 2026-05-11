@@ -5,7 +5,9 @@ const TeacherModel = {
   getAll: async () => {
     // Obtenemos solo los users con rol 'teacher'
     const [rows] = await pool.query(`
-      SELECT id, first_name, last_name, age, career_studied, specialty, username, active, hired_date 
+      SELECT id, first_name, last_name,
+             CONCAT(first_name, ' ', last_name) AS full_name,
+             age, career_studied, specialty, username, active, hired_date
       FROM users 
       WHERE role = 'teacher' 
       ORDER BY last_name, first_name
@@ -53,6 +55,10 @@ const TeacherModel = {
 
   updateStatus: async (id, active) => {
     await pool.query('UPDATE users SET active = ? WHERE id = ? AND role = "teacher"', [active, id]);
+  },
+
+  remove: async (id) => {
+    await pool.query('DELETE FROM users WHERE id = ? AND role = "teacher"', [id]);
   }
 };
 

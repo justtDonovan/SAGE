@@ -15,17 +15,39 @@ ALTER TABLE students
 
 -- Llenar las nuevas columnas con los datos del full_name
 -- Dividir en: primer nombre y resto como apellidos
-UPDATE users 
-SET 
-  first_name = TRIM(SUBSTRING_INDEX(full_name, ' ', 1)),
-  last_name = TRIM(SUBSTRING(full_name, LENGTH(SUBSTRING_INDEX(full_name, ' ', 1)) + 2))
-WHERE first_name = '' OR first_name IS NULL;
+SET @users_has_full_name := (
+  SELECT COUNT(*)
+  FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'users'
+    AND COLUMN_NAME = 'full_name'
+);
 
-UPDATE students
-SET
-  first_name = TRIM(SUBSTRING_INDEX(full_name, ' ', 1)),
-  last_name = TRIM(SUBSTRING(full_name, LENGTH(SUBSTRING_INDEX(full_name, ' ', 1)) + 2))
-WHERE first_name = '' OR first_name IS NULL;
+SET @students_has_full_name := (
+  SELECT COUNT(*)
+  FROM INFORMATION_SCHEMA.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'students'
+    AND COLUMN_NAME = 'full_name'
+);
+
+SET @sql_users := IF(
+  @users_has_full_name > 0,
+  'UPDATE users SET first_name = TRIM(SUBSTRING_INDEX(full_name, '' '', 1)), last_name = TRIM(SUBSTRING(full_name, LENGTH(SUBSTRING_INDEX(full_name, '' '', 1)) + 2)) WHERE first_name = '''' OR first_name IS NULL',
+  'SELECT 1'
+);
+PREPARE stmt_users FROM @sql_users;
+EXECUTE stmt_users;
+DEALLOCATE PREPARE stmt_users;
+
+SET @sql_students := IF(
+  @students_has_full_name > 0,
+  'UPDATE students SET first_name = TRIM(SUBSTRING_INDEX(full_name, '' '', 1)), last_name = TRIM(SUBSTRING(full_name, LENGTH(SUBSTRING_INDEX(full_name, '' '', 1)) + 2)) WHERE first_name = '''' OR first_name IS NULL',
+  'SELECT 1'
+);
+PREPARE stmt_students FROM @sql_students;
+EXECUTE stmt_students;
+DEALLOCATE PREPARE stmt_students;
 
 -- Eliminar la columna full_name original (solo si queremos realmente)
 -- ALTER TABLE users DROP COLUMN IF EXISTS full_name;

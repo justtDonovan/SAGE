@@ -66,7 +66,7 @@
         <section id="admin-students" class="panel" hidden>
           <div class="panel-header">
             <h2>Alumnos</h2>
-            <button id="addStudentBtn" class="btn primary">Nuevo alumno</button>
+            <button id="addStudentBtn" class="btn primary compact">Nuevo alumno</button>
           </div>
           <div class="panel-body">
             <table class="table">
@@ -88,7 +88,7 @@
         <section id="admin-teachers" class="panel" hidden>
           <div class="panel-header">
             <h2>Profesores</h2>
-            <button id="addTeacherBtn" class="btn primary">Nuevo profesor</button>
+            <button id="addTeacherBtn" class="btn primary compact">Nuevo profesor</button>
           </div>
           <div class="panel-body">
             <table class="table">
@@ -96,7 +96,7 @@
                 <tr>
                   <th>Nombre</th>
                   <th>Edad</th>
-                  <th>Carrera Estudiada</th>
+                  <th>Antecedentes</th>
                   <th>Especialidad</th>
                   <th>Usuario</th>
                   <th>Contraseña</th>
@@ -112,6 +112,7 @@
         <section id="admin-classes" class="panel" hidden>
           <div class="panel-header">
             <h2>Clases</h2>
+            <button id="addClassBtn" class="btn primary compact">Nueva clase</button>
           </div>
           <div class="panel-body">
             <h3>Clases por carrera</h3>
@@ -131,9 +132,11 @@
                 <tr>
                   <th>Nombre</th>
                   <th>Carrera</th>
+                  <th>Grupo</th>
                   <th>Profesor</th>
                   <th>Período</th>
                   <th>Calificación Promedio</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody id="classesTable"></tbody>
@@ -150,17 +153,162 @@
             <h3>Generar Reporte de Calificaciones</h3>
             <div class="form-inline">
               <select id="repClassSel"></select>
-              <input type="text" id="repEvalInput" placeholder="Tipo de evaluación (ej: Final)" />
+              <select id="repEvalInput">
+                <option value="Periodo 1">Periodo 1</option>
+                <option value="Periodo 2">Periodo 2</option>
+                <option value="Periodo 3">Periodo 3</option>
+              </select>
               <button id="btnBuildGrades" class="btn">Ver Vista Previa</button>
-              <button id="btnPdfFromPreview" class="btn primary" disabled>Generar PDF</button>
             </div>
             <div id="repPreview" style="margin-top: 2rem;"></div>
+            <div class="report-actions-bottom">
+              <button id="btnPdfFromPreview" class="btn primary compact" disabled>Generar PDF</button>
+            </div>
           </div>
+        </section>
+
+        <details id="studentFormCard" class="form-card" hidden>
+          <summary>Registrar alumno</summary>
+          <form id="studentForm">
+            <label for="stFirstName">Nombre</label>
+            <input id="stFirstName" required />
+            <label for="stLastName">Apellido(s)</label>
+            <input id="stLastName" required />
+            <label for="stCareer">Carrera</label>
+            <select id="stCareer" required></select>
+            <label for="stSemester">Semestre</label>
+            <select id="stSemester" required>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+              <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+              <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+            </select>
+            <label for="stEnrollment">Inscripción</label>
+            <input type="date" id="stEnrollment" required />
+            <button class="btn primary" type="submit">Guardar</button>
+          </form>
+        </details>
+
+        <details id="editStudentForm" class="form-card" hidden>
+          <summary>Editar alumno</summary>
+          <form id="editStudentFormInner">
+            <input type="hidden" id="editStudentId" />
+            <label for="editStFirstName">Nombre</label>
+            <input id="editStFirstName" required />
+            <label for="editStLastName">Apellido(s)</label>
+            <input id="editStLastName" required />
+            <label for="editStCareer">Carrera</label>
+            <select id="editStCareer" required></select>
+            <label for="editStSemester">Semestre</label>
+            <select id="editStSemester" required>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
+              <option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option>
+              <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+            </select>
+            <label for="editStEnrollment">Inscripción</label>
+            <input type="date" id="editStEnrollment" required />
+            <button class="btn primary" type="submit">Actualizar alumno</button>
+            <button class="btn" type="button" id="cancelEditStudent">Cancelar</button>
+          </form>
+        </details>
+
+        <details id="teacherFormCard" class="form-card" hidden>
+          <summary>Registrar profesor</summary>
+          <form id="teacherForm">
+            <label for="tcFirstName">Nombre</label>
+            <input id="tcFirstName" required />
+            <label for="tcLastName">Apellido(s)</label>
+            <input id="tcLastName" required />
+            <label for="tcAge">Edad</label>
+            <input type="number" id="tcAge" min="18" max="99" />
+            <label for="tcCareerStudied">Antecedentes</label>
+            <input id="tcCareerStudied" />
+            <label for="tcSpecialty">Especialidad</label>
+            <input id="tcSpecialty" />
+            <label for="tcUsername">Usuario</label>
+            <input id="tcUsername" required />
+            <label for="tcPassword">Contraseña</label>
+            <input type="password" id="tcPassword" required />
+            <button class="btn primary" type="submit">Guardar</button>
+          </form>
+        </details>
+
+        <details id="editTeacherForm" class="form-card" hidden>
+          <summary>Editar profesor</summary>
+          <form id="editTeacherFormInner">
+            <input type="hidden" id="editTeacherId" />
+            <label for="editTcFirstName">Nombre</label>
+            <input id="editTcFirstName" required />
+            <label for="editTcLastName">Apellido(s)</label>
+            <input id="editTcLastName" required />
+            <label for="editTcAge">Edad</label>
+            <input type="number" id="editTcAge" min="18" max="99" />
+            <label for="editTcCareerStudied">Antecedentes</label>
+            <input id="editTcCareerStudied" />
+            <label for="editTcSpecialty">Especialidad</label>
+            <input id="editTcSpecialty" />
+            <label for="editTcUsername">Usuario</label>
+            <input id="editTcUsername" required />
+            <label for="editTcPassword">Nueva contraseña (opcional)</label>
+            <input type="password" id="editTcPassword" />
+            <button class="btn primary" type="submit">Actualizar</button>
+            <button class="btn" type="button" id="cancelEditTeacher">Cancelar</button>
+          </form>
+        </details>
+
+        <details id="classFormCard" class="form-card" hidden>
+          <summary>Registrar clase</summary>
+          <form id="addClassForm">
+            <label for="clName">Materia</label>
+            <input id="clName" required />
+            <label for="clCareer">Carrera</label>
+            <select id="clCareer" required></select>
+            <label for="clGroup">Grupo</label>
+            <input id="clGroup" placeholder="Ej: G-1" />
+            <label for="clTeacherAdd">Profesor</label>
+            <select id="clTeacherAdd"></select>
+            <label for="clPeriod">Período</label>
+            <input id="clPeriod" placeholder="2026A" required />
+            <button class="btn primary" type="submit">Guardar clase</button>
+          </form>
+        </details>
+
+        <details id="editClassForm" class="form-card" hidden>
+          <summary>Editar clase</summary>
+          <form id="editClassFormInner">
+            <input type="hidden" id="editClassId" />
+            <label for="editClName">Materia</label>
+            <input id="editClName" required />
+            <label for="editClCareer">Carrera</label>
+            <select id="editClCareer" required></select>
+            <label for="editClGroup">Grupo</label>
+            <input id="editClGroup" />
+            <label for="editClTeacher">Profesor</label>
+            <select id="editClTeacher"></select>
+            <label for="editClPeriod">Período</label>
+            <input id="editClPeriod" required />
+            <button class="btn primary" type="submit">Actualizar clase</button>
+            <button class="btn" type="button" id="cancelEditClass">Cancelar</button>
+          </form>
+        </details>
+
+        <section id="enrollStudentForm" class="panel" hidden>
+          <h3>Inscribir alumno</h3>
+          <p id="enrollStudentName"></p>
+          <form id="enrollStudentFormInner" class="form-inline">
+            <input type="hidden" id="enrollStudentId" />
+            <select id="enrollClass"></select>
+            <button type="submit" class="btn primary compact">Inscribir</button>
+            <button type="button" class="btn compact" id="cancelEnrollStudent">Cancelar</button>
+          </form>
+          <table class="table" style="margin-top:1rem;">
+            <thead><tr><th>Materia</th><th>Profesor</th><th>Período</th></tr></thead>
+            <tbody id="studentEnrolledClassesTable"></tbody>
+          </table>
         </section>
       </main>
     </section>
 
-    <script src="js/app.js"></script>
+    <script src="js/app.js?v=20260510"></script>
     <script>
       // Custom Cursor Logic
       const cursor = document.querySelector('.custom-cursor');

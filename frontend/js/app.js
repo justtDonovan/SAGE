@@ -64,6 +64,17 @@ const byId = (id) => document.getElementById(id);
 const show = (el) => el?.removeAttribute('hidden');
 const hide = (el) => el?.setAttribute('hidden', '');
 const fmtMoney = (n) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
+const fullName = (person) => `${person?.first_name || ''} ${person?.last_name || ''}`.trim();
+
+async function loadCareers() {
+  try {
+    const res = await fetch('/api/careers');
+    if (!res.ok) return;
+    state.careers = await res.json();
+  } catch (error) {
+    console.error('No se pudieron cargar carreras:', error);
+  }
+}
 
 // Tema (modo nocturno / modo normal)
 const theme = {
@@ -448,58 +459,57 @@ async function renderAdminHome() {
 // Admin Students
 async function renderAdminStudents() {
   const tbody = byId('studentsTable');
-  tbody.innerHTML = '<tr><td colspan="5">Cargando...</td></tr>';
-  
-  let students = [];
-  const careers = state.careers; // TODO: Cargar esto también con fetch
+  if (!tbody) return;
 
-  // 1. Obtener datos
+  await loadCareers();
+  tbody.innerHTML = '<tr><td colspan="5">Cargando...</td></tr>';
+
+  let students = [];
   try {
     const res = await fetch('/api/students');
     if (!res.ok) throw new Error('Error al cargar alumnos');
     students = await res.json();
-    state.students = students; // Sync local
+    state.students = students;
   } catch (error) {
     console.error(error);
-    tbody.innerHTML = '<tr><td colspan="5" class="error">Error cargando datos. Asegúrate de que el backend esté corriendo.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="error">Error cargando alumnos.</td></tr>';
     return;
   }
 
-  // 2. Renderizar tabla
-  if (students.length === 0) {
+  if (!students.length) {
     tbody.innerHTML = '<tr><td colspan="5">No hay alumnos registrados.</td></tr>';
   } else {
-    tbody.innerHTML = students.map(s => {
-      const c = careers.find(c => c.id === s.career_id)?.name || '-';
+    tbody.innerHTML = students.map((s) => {
+      const c = state.careers.find((x) => x.id === s.career_id)?.name || '-';
       const isInactive = s.active === 0;
       const status = isInactive ? ' (Baja)' : '';
-      const disableEnroll = isInactive ? 'disabled title="Alumno dado de baja"' : '';
-      const toggleText = isInactive ? 'Reactivar' : 'Dar de baja';
       const date = new Date(s.enrollment_date).toLocaleDateString();
-      const fullName = `${s.first_name} ${s.last_name}`;
+      const toggleText = isInactive ? 'Reactivar' : 'Dar de baja';
 
       return `<tr>
-        <td>${fullName}${status}</td>
+        <td>${fullName(s)}${status}</td>
         <td>${c}</td>
         <td>${s.semester}</td>
         <td>${date}</td>
         <td>
-          <button class="btn ${isInactive ? 'baja' : ''}" data-enroll-student="${s.id}" ${disableEnroll}>Inscribir a clase</button>
-          <button class="btn" data-toggle-status="${s.id}">${toggleText}</button>
+          <div class="row-actions">
+            <button class="btn compact" data-edit-student="${s.id}">Editar</button>
+            <button class="btn compact" data-enroll-student="${s.id}" ${isInactive ? 'disabled' : ''}>Inscribir</button>
+            <button class="btn compact" data-toggle-status="${s.id}">${toggleText}</button>
+            <button class="btn compact" data-delete-student="${s.id}">Eliminar</button>
+          </div>
         </td>
       </tr>`;
     }).join('');
   }
 
-  // 3. Select de Carreras en Formulario
   const careerSel = byId('stCareer');
-  if(careerSel) {
-    careerSel.innerHTML = careers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  if (careerSel) {
+    careerSel.innerHTML = state.careers.map((c) => `<option value="${c.id}">${c.name}</option>`).join('');
   }
 
-  // 4. Configurar Formulario CREAR
   const form = byId('studentForm');
-  if(form) {
+  if (form) {
     form.onsubmit = async (e) => {
       e.preventDefault();
       const newStudent = {
@@ -509,107 +519,171 @@ async function renderAdminStudents() {
         semester: Number(byId('stSemester').value),
         enrollment_date: byId('stEnrollment').value
       };
-
       try {
         const postRes = await fetch('/api/students', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newStudent)
         });
-
-        if (postRes.ok) {
-          alert('Alumno registrado correctamente');
-          if (window._activeModalClose) window._activeModalClose();
-          form.reset();
-          renderAdminStudents();
-        } else {
-          alert('Error al guardar alumno');
-        }
-      } catch (err) { console.error(err); alert('Error de conexión'); }
+        if (!postRes.ok) throw new Error('No se pudo crear');
+        if (window._activeModalClose) window._activeModalClose();
+        form.reset();
+        renderAdminStudents();
+      } catch (err) {
+        console.error(err);
+        alert('Error al guardar alumno');
+      }
     };
   }
 
-  // 5. Botón 'Nuevo Alumno'
   const addStudentBtn = byId('addStudentBtn');
   if (addStudentBtn) {
     addStudentBtn.onclick = () => {
       const card = byId('studentFormCard');
-      if(card) openModalWithElement(card, 'Registrar alumno');
+      if (card) openModalWithElement(card, 'Registrar alumno');
     };
   }
 
-  // 6. Eventos de la tabla (Delegación no es necesaria porque re-renderizamos)
-  // Inscribir
-  tbody.querySelectorAll('[data-enroll-student]').forEach(btn => {
+  tbody.querySelectorAll('[data-edit-student]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = Number(btn.getAttribute('data-edit-student'));
+      const student = students.find((s) => s.id === id);
+      if (!student) return;
+
+      byId('editStudentId').value = String(student.id);
+      byId('editStFirstName').value = student.first_name || '';
+      byId('editStLastName').value = student.last_name || '';
+      byId('editStCareer').value = String(student.career_id || '');
+      byId('editStSemester').value = String(student.semester || '1');
+      byId('editStEnrollment').value = student.enrollment_date ? String(student.enrollment_date).slice(0, 10) : '';
+
+      const editCareerSel = byId('editStCareer');
+      if (editCareerSel) {
+        editCareerSel.innerHTML = state.careers.map((c) => `<option value="${c.id}">${c.name}</option>`).join('');
+        editCareerSel.value = String(student.career_id || '');
+      }
+
+      const editStudentCard = byId('editStudentForm');
+      if (editStudentCard) openModalWithElement(editStudentCard, 'Editar alumno');
+    });
+  });
+
+  const editStudentForm = byId('editStudentFormInner');
+  if (editStudentForm) {
+    editStudentForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const id = Number(byId('editStudentId').value);
+      try {
+        const res = await fetch(`/api/students/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            first_name: byId('editStFirstName').value.trim(),
+            last_name: byId('editStLastName').value.trim(),
+            career_id: Number(byId('editStCareer').value),
+            semester: Number(byId('editStSemester').value),
+            enrollment_date: byId('editStEnrollment').value
+          })
+        });
+        if (!res.ok) throw new Error('No se pudo actualizar el alumno');
+        if (window._activeModalClose) window._activeModalClose();
+        renderAdminStudents();
+      } catch (err) {
+        console.error(err);
+        alert(err.message);
+      }
+    };
+  }
+
+  const cancelEditStudent = byId('cancelEditStudent');
+  if (cancelEditStudent) {
+    cancelEditStudent.onclick = () => {
+      if (window._activeModalClose) window._activeModalClose();
+    };
+  }
+
+  tbody.querySelectorAll('[data-delete-student]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = Number(btn.getAttribute('data-delete-student'));
+      if (!confirm('¿Eliminar alumno de forma permanente?')) return;
+      try {
+        await fetch(`/api/students/${id}`, { method: 'DELETE' });
+        renderAdminStudents();
+      } catch (err) {
+        console.error(err);
+        alert('No se pudo eliminar el alumno');
+      }
+    });
+  });
+
+  tbody.querySelectorAll('[data-enroll-student]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const studentId = Number(btn.getAttribute('data-enroll-student'));
-      const student = students.find(s => s.id === studentId);
-      if (!student) return;
-      
-      if (student.active === 0) { alert('Alumno dado de baja'); return; }
+      const student = students.find((s) => s.id === studentId);
+      if (!student || student.active === 0) return;
 
       byId('enrollStudentId').value = student.id;
-      byId('enrollStudentName').textContent = `Alumno: ${student.full_name}`;
-      
-      // 1. Cargar clases disponibles para la carrera (desde Backend)
+      byId('enrollStudentName').textContent = `Alumno: ${fullName(student)}`;
+
       let availableClasses = [];
       try {
         const classesRes = await fetch('/api/classes');
         if (classesRes.ok) {
           const allClasses = await classesRes.json();
-          availableClasses = allClasses.filter(cl => cl.career_id === student.career_id);
+          availableClasses = allClasses.filter((cl) => cl.career_id === student.career_id);
         }
-      } catch (err) { console.error('Error cargando clases:', err); }
+      } catch (err) {
+        console.error(err);
+      }
 
       const enrollClassSel = byId('enrollClass');
-      if(enrollClassSel) enrollClassSel.innerHTML = availableClasses.map(cl => `<option value="${cl.id}">${cl.name}</option>`).join('');
-      
-      // Mostrar clases inscritas (desde Backend)
+      if (enrollClassSel) {
+        enrollClassSel.innerHTML = availableClasses.map((cl) => `<option value="${cl.id}">${cl.name}</option>`).join('');
+      }
+
       try {
         const enrollRes = await fetch(`/api/classes/student/${studentId}`);
         if (enrollRes.ok) {
           const enrolledClasses = await enrollRes.json();
           const enrolledTable = byId('studentEnrolledClassesTable');
           if (enrolledTable) {
-            enrolledTable.innerHTML = enrolledClasses.map(cl => {
-              return `<tr><td>${cl.name}</td><td>${cl.teacher_name || 'Sin asignar'}</td><td>${cl.period || '-'}</td></tr>`;
-            }).join('');
+            enrolledTable.innerHTML = enrolledClasses.map((cl) => `<tr><td>${cl.name}</td><td>${cl.teacher_name || 'Sin asignar'}</td><td>${cl.period || '-'}</td></tr>`).join('');
           }
         }
-      } catch (err) { console.error('Error cargando inscripciones:', err); }
+      } catch (err) {
+        console.error(err);
+      }
 
       show(byId('enrollStudentForm'));
     });
   });
 
-  // Cambiar Estado (Baja/Alta)
-  tbody.querySelectorAll('[data-toggle-status]').forEach(btn => {
+  tbody.querySelectorAll('[data-toggle-status]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const id = Number(btn.getAttribute('data-toggle-status'));
-      const st = students.find(s => s.id === id);
-      if (!st) return;
-
-      const newStatus = st.active === 0 ? true : false; 
+      const student = students.find((s) => s.id === id);
+      if (!student) return;
       try {
-         await fetch(`/api/students/${id}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ active: newStatus })
-         });
-         renderAdminStudents();
-      } catch(e) { console.error(e); alert('Error al cambiar estado'); }
+        await fetch(`/api/students/${id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ active: student.active === 0 })
+        });
+        renderAdminStudents();
+      } catch (err) {
+        console.error(err);
+        alert('No se pudo cambiar estado');
+      }
     });
   });
 
-  // Formulario Inscripción (Cerrar conexión con Backend)
   const enrollInner = byId('enrollStudentFormInner');
   if (enrollInner) {
-      enrollInner.onsubmit = async (e) => {
+    enrollInner.onsubmit = async (e) => {
       e.preventDefault();
       const class_id = Number(byId('enrollClass').value);
       const student_id = Number(byId('enrollStudentId').value);
-      
-      if (!class_id) { alert('Selecciona una clase'); return; }
+      if (!class_id || !student_id) return;
 
       try {
         const res = await fetch('/api/classes/enroll', {
@@ -617,30 +691,23 @@ async function renderAdminStudents() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ class_id, student_id })
         });
-        
         const data = await res.json();
-        if (res.ok) {
-          alert('Inscripción realizada con éxito');
-          // Actualizar lista de inscritas sin cerrar modal si se quiere seguir inscribiendo
-          // O cerrar
-          hide(byId('enrollStudentForm'));
-          renderAdminStudents(); 
-        } else {
-          alert(data.error || 'Error al inscribir');
-        }
+        if (!res.ok) throw new Error(data.error || 'Error al inscribir');
+        hide(byId('enrollStudentForm'));
+        renderAdminStudents();
       } catch (err) {
         console.error(err);
-        alert('Error de conexión');
+        alert(err.message || 'Error al inscribir');
       }
     };
   }
-  
+
   const cancelEnroll = byId('cancelEnrollStudent');
-  if(cancelEnroll) {
-    cancelEnroll.addEventListener('click', () => {
-        hide(byId('enrollStudentForm'));
-        if(enrollInner) enrollInner.reset();
-    });
+  if (cancelEnroll) {
+    cancelEnroll.onclick = () => {
+      hide(byId('enrollStudentForm'));
+      if (enrollInner) enrollInner.reset();
+    };
   }
 }
 
@@ -680,8 +747,11 @@ async function renderAdminTeachers() {
         <td>${t.username ?? '-'}</td>
         <td>******</td> <!-- Ocultar password -->
         <td>
-          <button class="btn" data-edit-teacher="${t.id}">Editar</button>
-          <button class="btn" data-toggle-teacher-status="${t.id}">${toggleText}</button>
+          <div class="row-actions">
+            <button class="btn compact" data-edit-teacher="${t.id}">Editar</button>
+            <button class="btn compact" data-toggle-teacher-status="${t.id}">${toggleText}</button>
+            <button class="btn compact" data-delete-teacher="${t.id}">Eliminar</button>
+          </div>
         </td>
       </tr>`;
     }).join('');
@@ -739,6 +809,21 @@ async function renderAdminTeachers() {
             });
             renderAdminTeachers();
         } catch(e) { console.error(e); alert('Error al cambiar estado'); }
+      }
+    });
+  });
+
+  tbody.querySelectorAll('[data-delete-teacher]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = Number(btn.getAttribute('data-delete-teacher'));
+      if (!confirm('¿Eliminar profesor de forma permanente?')) return;
+      try {
+        const res = await fetch(`/api/teachers/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('No se pudo eliminar');
+        renderAdminTeachers();
+      } catch (error) {
+        console.error(error);
+        alert('Error al eliminar profesor');
       }
     });
   });
@@ -889,123 +974,225 @@ function refreshAssignmentSection(teachers) {
 
 // Admin Classes
 async function renderAdminClasses() {
+  await loadCareers();
   const tbodyCareer = byId('classesByCareerTable');
+  const ctbody = byId('classesTable');
+  if (!tbodyCareer || !ctbody) return;
+
   tbodyCareer.innerHTML = '<tr><td colspan="2">Cargando...</td></tr>';
 
   let classes = [];
+  let teachers = [];
   try {
-    const res = await fetch('/api/classes');
-    if (res.ok) {
-      classes = await res.json();
-      state.classes = classes; // Sync local
-    }
-  } catch (error) { console.error(error); }
+    const [classesRes, teachersRes] = await Promise.all([
+      fetch('/api/classes'),
+      fetch('/api/teachers')
+    ]);
+    if (classesRes.ok) classes = await classesRes.json();
+    if (teachersRes.ok) teachers = await teachersRes.json();
+    state.classes = classes;
+    state.teachers = teachers;
+  } catch (error) {
+    console.error(error);
+  }
 
-  // Clases por carrera
-  const byCareer = state.careers.map(c => {
-    const count = classes.filter(cl => cl.career_id === c.id).length;
-    return { name: c.name, count };
-  });
-  tbodyCareer.innerHTML = byCareer.map(x => `<tr><td>${x.name}</td><td>${x.count}</td></tr>`).join('');
+  const byCareer = state.careers.map((c) => ({ name: c.name, count: classes.filter((cl) => cl.career_id === c.id).length }));
+  tbodyCareer.innerHTML = byCareer.map((x) => `<tr><td>${x.name}</td><td>${x.count}</td></tr>`).join('');
 
-  // Formulario para agregar clase
   const clCareerSel = byId('clCareer');
   const clTeacherAddSel = byId('clTeacherAdd');
-  clCareerSel.innerHTML = state.careers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-  clTeacherAddSel.innerHTML = '<option value="">Sin profesor</option>' + state.teachers
-    .filter(t => t.active !== false)
-    .map(t => `<option value="${t.id}">${t.full_name}</option>`)
+  const editClCareerSel = byId('editClCareer');
+  const editClTeacherSel = byId('editClTeacher');
+
+  const careerOptions = state.careers.map((c) => `<option value="${c.id}">${c.name}</option>`).join('');
+  const teacherOptions = '<option value="">Sin profesor</option>' + teachers
+    .filter((t) => t.active !== 0)
+    .map((t) => `<option value="${t.id}">${fullName(t)}</option>`)
     .join('');
 
-  byId('addClassForm').onsubmit = async (e) => {
-    e.preventDefault();
-    const name = byId('clName').value.trim();
-    const career_id = Number(byId('clCareer').value);
-    const period = byId('clPeriod').value.trim();
-    const teacher_id_raw = byId('clTeacherAdd').value;
-    const teacher_id = teacher_id_raw ? Number(teacher_id_raw) : null;
-    
-    if (!name || !career_id || !period) return;
+  if (clCareerSel) clCareerSel.innerHTML = careerOptions;
+  if (editClCareerSel) editClCareerSel.innerHTML = careerOptions;
+  if (clTeacherAddSel) clTeacherAddSel.innerHTML = teacherOptions;
+  if (editClTeacherSel) editClTeacherSel.innerHTML = teacherOptions;
 
-    try {
-      const res = await fetch('/api/classes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, career_id, teacher_id, period })
-      });
-
-      if (res.ok) {
-        alert('Clase agregada correctamente');
-        byId('addClassForm').reset();
+  const addClassForm = byId('addClassForm');
+  if (addClassForm) {
+    addClassForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const payload = {
+        name: byId('clName').value.trim(),
+        career_id: Number(byId('clCareer').value),
+        group_name: byId('clGroup').value.trim() || null,
+        teacher_id: byId('clTeacherAdd').value ? Number(byId('clTeacherAdd').value) : null,
+        period: byId('clPeriod').value.trim()
+      };
+      try {
+        const res = await fetch('/api/classes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('No se pudo guardar la clase');
+        if (window._activeModalClose) window._activeModalClose();
+        addClassForm.reset();
         renderAdminClasses();
-      } else {
-        alert('Error al guardar clase');
+      } catch (error) {
+        console.error(error);
+        alert(error.message);
       }
-    } catch (err) {
-      console.error(err);
-      alert('Error de conexión');
-    }
-  };
+    };
+  }
 
-  // Listado de clases en tabla
-  const ctbody = byId('classesTable');
-  ctbody.innerHTML = classes.map(cl => {
-    const careerName = state.careers.find(c => c.id === cl.career_id)?.name || '-';
-    const teacherName = cl.teacher_name || 'Sin asignar';
+  const addClassBtn = byId('addClassBtn');
+  if (addClassBtn) {
+    addClassBtn.onclick = () => {
+      const card = byId('classFormCard');
+      if (card) openModalWithElement(card, 'Registrar clase');
+    };
+  }
+
+  ctbody.innerHTML = classes.map((cl) => {
+    const careerName = state.careers.find((c) => c.id === cl.career_id)?.name || '-';
     const avg = cl.average_grade != null ? Number(cl.average_grade).toFixed(2) : '-';
     return `<tr>
       <td>${cl.name}</td>
       <td>${careerName}</td>
-      <td>${teacherName}</td>
+      <td>${cl.group_name || '-'}</td>
+      <td>${cl.teacher_name || 'Sin asignar'}</td>
       <td>${cl.period || '-'}</td>
       <td>${avg}</td>
+      <td>
+        <div class="row-actions">
+          <button class="btn compact" data-edit-class="${cl.id}">Editar</button>
+          <button class="btn compact" data-delete-class="${cl.id}">Eliminar</button>
+        </div>
+      </td>
     </tr>`;
   }).join('');
+
+  ctbody.querySelectorAll('[data-edit-class]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = Number(btn.getAttribute('data-edit-class'));
+      const cl = classes.find((x) => x.id === id);
+      if (!cl) return;
+      byId('editClassId').value = String(cl.id);
+      byId('editClName').value = cl.name || '';
+      byId('editClCareer').value = String(cl.career_id || '');
+      byId('editClGroup').value = cl.group_name || '';
+      byId('editClTeacher').value = cl.teacher_id ? String(cl.teacher_id) : '';
+      byId('editClPeriod').value = cl.period || '';
+      const formCard = byId('editClassForm');
+      if (formCard) openModalWithElement(formCard, 'Editar clase');
+    });
+  });
+
+  ctbody.querySelectorAll('[data-delete-class]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = Number(btn.getAttribute('data-delete-class'));
+      if (!confirm('¿Eliminar clase? Esto también eliminará inscripciones y calificaciones asociadas.')) return;
+      try {
+        const res = await fetch(`/api/classes/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('No se pudo eliminar la clase');
+        renderAdminClasses();
+      } catch (error) {
+        console.error(error);
+        alert(error.message);
+      }
+    });
+  });
+
+  const editClassForm = byId('editClassFormInner');
+  if (editClassForm) {
+    editClassForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const id = Number(byId('editClassId').value);
+      try {
+        const res = await fetch(`/api/classes/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: byId('editClName').value.trim(),
+            career_id: Number(byId('editClCareer').value),
+            group_name: byId('editClGroup').value.trim() || null,
+            teacher_id: byId('editClTeacher').value ? Number(byId('editClTeacher').value) : null,
+            period: byId('editClPeriod').value.trim()
+          })
+        });
+        if (!res.ok) throw new Error('No se pudo actualizar la clase');
+        if (window._activeModalClose) window._activeModalClose();
+        renderAdminClasses();
+      } catch (error) {
+        console.error(error);
+        alert(error.message);
+      }
+    };
+  }
+
+  const cancelEditClass = byId('cancelEditClass');
+  if (cancelEditClass) {
+    cancelEditClass.onclick = () => {
+      if (window._activeModalClose) window._activeModalClose();
+    };
+  }
 }
 
 // Admin Reports
+let reportPreviewRows = [];
+let reportPreviewMeta = { className: '-', teacherName: '-', evaluation: '-', groupName: '-' };
+
 function renderAdminReports() {
   const repClassSel = byId('repClassSel');
   if (repClassSel) repClassSel.innerHTML = state.classes.map(cl => `<option value="${cl.id}">${cl.name}</option>`).join('');
   const repEvalInput = byId('repEvalInput');
-  if (repEvalInput) repEvalInput.value = 'Final';
+  if (repEvalInput) repEvalInput.value = 'Periodo 1';
   const btnBuild = byId('btnBuildGrades');
-  if (btnBuild) btnBuild.onclick = () => {
+  if (btnBuild) btnBuild.onclick = async () => {
     const class_id = Number(repClassSel.value);
-    const evaluation = (repEvalInput.value || 'Final').trim();
-    buildGradesReportPreview(class_id, evaluation);
+    const evaluation = (repEvalInput.value || 'Periodo 1').trim();
+    await buildGradesReportPreview(class_id, evaluation);
     const btnPdf = byId('btnPdfFromPreview'); if (btnPdf) btnPdf.disabled = false;
   };
   const btnPdf = byId('btnPdfFromPreview');
   if (btnPdf) btnPdf.onclick = () => {
     const class_id = Number(repClassSel.value);
-    const evaluation = (repEvalInput.value || 'Final').trim();
+    const evaluation = (repEvalInput.value || 'Periodo 1').trim();
     generateGradesReportPdf(class_id, evaluation);
   };
 }
 
-function buildGradesReportPreview(class_id, evaluation) {
+async function buildGradesReportPreview(class_id, evaluation) {
   const cont = byId('repPreview'); if (!cont) return;
-  const cl = state.classes.find(c => c.id === class_id);
-  const teacher = state.teachers.find(t => t.id === cl?.teacher_id)?.full_name || '-';
-  const sids = state.class_students.filter(cs => cs.class_id === class_id).map(cs => cs.student_id);
-  const data = sids.map(id => {
-    const st = state.students.find(s => s.id === id);
-    const g = state.grades.find(x => x.class_id === class_id && x.student_id === id && x.evaluation === evaluation)?.grade;
-    return { name: st?.full_name || '-', grade: g === undefined || g === '' ? null : Number(g) };
-  });
+  let data = [];
+  try {
+    const res = await fetch(`/api/grades/table/${class_id}/${encodeURIComponent(evaluation)}`);
+    if (!res.ok) throw new Error('No se pudo construir el reporte');
+    data = await res.json();
+  } catch (error) {
+    console.error(error);
+    cont.innerHTML = `<div class="error">${error.message}</div>`;
+    return;
+  }
+
+  reportPreviewRows = data;
+  reportPreviewMeta = {
+    className: data[0]?.class_name || '-',
+    teacherName: data[0]?.teacher_name || '-',
+    evaluation,
+    groupName: data[0]?.group_name || '-'
+  };
+
   const vals = data.map(d => d.grade ?? 0);
   const avg = vals.length ? (vals.reduce((a,b)=>a+Number(b),0)/vals.length) : 0;
   const min = vals.length ? Math.min(...vals) : 0;
   const max = vals.length ? Math.max(...vals) : 0;
   const fails = vals.filter(v => Number(v) === 0).length;
-  const rows = data.map(d => `<tr><td>${d.name}</td><td>${d.grade ?? '-'}</td></tr>`).join('');
+  const rows = data.map(d => `<tr><td>${fullName(d)}</td><td>${d.group_name || '-'}</td><td>${d.grade ?? '-'}</td></tr>`).join('');
   cont.innerHTML = `
     <h3>Vista previa del reporte de calificaciones</h3>
-    <div><b>Clase:</b> ${cl?.name || '-'} &nbsp; <b>Evaluación:</b> ${evaluation} &nbsp; <b>Profesor:</b> ${teacher}</div>
+    <div><b>Clase:</b> ${reportPreviewMeta.className} &nbsp; <b>Grupo:</b> ${reportPreviewMeta.groupName} &nbsp; <b>Evaluación:</b> ${evaluation} &nbsp; <b>Profesor:</b> ${reportPreviewMeta.teacherName}</div>
     <div class="grid two" style="margin-top:8px">
       <div>
-        <table class="table"><thead><tr><th>Alumno</th><th>Calificación</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td>Promedio</td><td>${avg.toFixed(2)}</td></tr></tfoot></table>
+        <table class="table"><thead><tr><th>Alumno</th><th>Grupo</th><th>Calificación</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="2">Promedio</td><td>${avg.toFixed(2)}</td></tr></tfoot></table>
       </div>
       <div>
         <canvas id="gradesChart" width="600" height="240"></canvas>
@@ -1035,27 +1222,20 @@ function drawGradesChart(canvas, labels, values) {
 }
 
 function generateGradesReportPdf(class_id, evaluation) {
-  const cl = state.classes.find(c => c.id === class_id);
-  const teacher = state.teachers.find(t => t.id === cl?.teacher_id)?.full_name || '-';
-  const sids = state.class_students.filter(cs => cs.class_id === class_id).map(cs => cs.student_id);
-  const data = sids.map(id => {
-    const st = state.students.find(s => s.id === id);
-    const g = state.grades.find(x => x.class_id === class_id && x.student_id === id && x.evaluation === evaluation)?.grade;
-    return { name: st?.full_name || '-', grade: g === undefined || g === '' ? '-' : Number(g) };
-  });
+  const data = reportPreviewRows.length ? reportPreviewRows : [];
   const vals = data.map(d => d.grade === '-' ? 0 : Number(d.grade));
   const avg = vals.length ? (vals.reduce((a,b)=>a+Number(b),0)/vals.length).toFixed(2) : '-';
   const min = vals.length ? Math.min(...vals) : '-';
   const max = vals.length ? Math.max(...vals) : '-';
   const fails = vals.filter(v => Number(v) === 0).length;
-  const rows = data.map(d => `<tr><td>${d.name}</td><td>${d.grade}</td></tr>`).join('');
+  const rows = data.map(d => `<tr><td>${fullName(d)}</td><td>${d.group_name || '-'}</td><td>${d.grade ?? '-'}</td></tr>`).join('');
   const cvs = byId('gradesChart');
   const img = cvs ? `<img src="${cvs.toDataURL()}" style="width:100%;max-width:700px;height:auto" />` : '';
   const content = `
     <h2>Reporte de Calificaciones</h2>
     <small>Fecha: ${new Date().toLocaleString('es-MX')}</small>
-    <div><b>Clase:</b> ${cl?.name || '-'} &nbsp; <b>Evaluación:</b> ${evaluation} &nbsp; <b>Profesor:</b> ${teacher}</div>
-    <table><thead><tr><th>Alumno</th><th>Calificación</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td>Promedio</td><td>${avg}</td></tr></tfoot></table>
+    <div><b>Clase:</b> ${reportPreviewMeta.className} &nbsp; <b>Grupo:</b> ${reportPreviewMeta.groupName} &nbsp; <b>Evaluación:</b> ${evaluation} &nbsp; <b>Profesor:</b> ${reportPreviewMeta.teacherName}</div>
+    <table><thead><tr><th>Alumno</th><th>Grupo</th><th>Calificación</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="2">Promedio</td><td>${avg}</td></tr></tfoot></table>
     <h3>Gráfica</h3>
     ${img}
     <div>Min: ${min} &nbsp; Max: ${max} &nbsp; Reprobados (0): ${fails}</div>
@@ -1229,82 +1409,111 @@ async function renderTeacherStudents() {
 
 // Teacher Grades
 function renderTeacherGrades() {
-  const teacherId = session.teacherId;
-  const teacherClasses = state.classes.filter(cl => cl.teacher_id === teacherId);
+  const teacherId = session.teacherId || session.userId;
+  const careerFilter = byId('grCareerFilter');
+  const teacherFilter = byId('grTeacherFilter');
   const classSel = byId('grClass');
-  classSel.innerHTML = teacherClasses.map(cl => `<option value="${cl.id}">${cl.name}</option>`).join('');
-  byId('grEval').value = 'Final';
+  const evalSel = byId('grEval');
+  const tableBody = byId('gradesTable');
 
-  byId('grLoad').onclick = () => {
-    const class_id = Number(byId('grClass').value);
-    const evaluation = byId('grEval').value.trim() || 'Final';
-    const studentsInClass = state.class_students.filter(cs => cs.class_id === class_id).map(cs => cs.student_id);
-    const rows = studentsInClass.map(sid => {
-      const st = state.students.find(s => s.id === sid);
-      const existing = state.grades.find(g => g.class_id === class_id && g.student_id === sid && g.evaluation === evaluation)?.grade || '';
-      return `<tr>
-        <td>${st?.full_name}</td>
-        <td><input type="number" min="0" max="100" step="1" data-grade="${sid}" value="${existing}"></td>
-      </tr>`;
-    }).join('');
-    byId('gradesTable').innerHTML = rows;
+  if (!classSel || !evalSel || !tableBody || !careerFilter || !teacherFilter) return;
 
-    byId('gradesTable').querySelectorAll('input[data-grade]').forEach(inp => {
-      inp.addEventListener('change', () => {
-        const student_id = Number(inp.getAttribute('data-grade'));
-        let grade = Number(inp.value);
-        if (isNaN(grade) || grade < 0) return;
-        if (grade > 100) { grade = 100; inp.value = 100; }
-        if (grade < 70) { grade = 0; inp.value = 0; }
-        const existing = state.grades.find(g => g.class_id === class_id && g.student_id === student_id && g.evaluation === evaluation);
-        if (existing) {
-          existing.grade = grade;
-        } else {
-          const id = state.grades.length ? Math.max(...state.grades.map(x => x.id || 0)) + 1 : 1;
-          state.grades.push({ id, class_id, student_id, evaluation, grade, recorded_by_teacher_id: 1 });
-        }
-      });
-    });
+  const loadFilters = async () => {
+    const res = await fetch(`/api/grades/filters${teacherId ? `?teacher_id=${teacherId}` : ''}`);
+    if (!res.ok) throw new Error('No se pudieron cargar filtros');
+    return res.json();
   };
 
-  // Guardar cambios y recalcular promedio del salón
-  byId('grSave').onclick = () => {
-    const class_id = Number(byId('grClass').value);
-    const evaluation = byId('grEval').value.trim() || 'Final';
-    const inputs = byId('gradesTable').querySelectorAll('input[data-grade]');
-    let updated = 0;
-    inputs.forEach(inp => {
-      const student_id = Number(inp.getAttribute('data-grade'));
-      const val = inp.value;
-      if (val === '') return; // ignora vacíos
-      let grade = Number(val);
-      if (isNaN(grade) || grade < 0) return;
-      if (grade > 100) grade = 100;
-      if (grade < 70) grade = 0;
-      const existing = state.grades.find(g => g.class_id === class_id && g.student_id === student_id && g.evaluation === evaluation);
-      if (existing) {
-        existing.grade = grade;
-      } else {
-        const id = state.grades.length ? Math.max(...state.grades.map(x => x.id || 0)) + 1 : 1;
-        state.grades.push({ id, class_id, student_id, evaluation, grade, recorded_by_teacher_id: 1 });
-      }
-      updated++;
-    });
+  const applyFilters = async () => {
+    try {
+      const { careers, teachers, classes } = await loadFilters();
+      state.careers = careers;
+      state.teachers = teachers;
+      state.classes = classes;
 
-    // Recalcular promedio para la clase en la evaluación seleccionada
-    const gradesForClassEval = state.grades.filter(g => g.class_id === class_id && g.evaluation === evaluation);
-    if (gradesForClassEval.length) {
-      const avg = gradesForClassEval.reduce((acc, g) => acc + Number(g.grade), 0) / gradesForClassEval.length;
-      const cl = state.classes.find(c => c.id === class_id);
-      if (cl) cl.average_grade = Number(avg.toFixed(2));
+      careerFilter.innerHTML = '<option value="">Todas las carreras</option>' + careers.map((c) => `<option value="${c.id}">${c.name}</option>`).join('');
+      teacherFilter.innerHTML = '<option value="">Todos los profesores</option>' + teachers.map((t) => `<option value="${t.id}">${t.name}</option>`).join('');
+
+      const renderClassOptions = () => {
+        let filtered = classes.slice();
+        if (careerFilter.value) filtered = filtered.filter((cl) => String(cl.career_id) === careerFilter.value);
+        if (teacherFilter.value) filtered = filtered.filter((cl) => String(cl.teacher_id) === teacherFilter.value);
+        classSel.innerHTML = filtered.map((cl) => `<option value="${cl.id}">${cl.name}${cl.group_name ? ` (${cl.group_name})` : ''}</option>`).join('');
+      };
+
+      careerFilter.onchange = renderClassOptions;
+      teacherFilter.onchange = renderClassOptions;
+      renderClassOptions();
+    } catch (error) {
+      console.error(error);
+      byId('grMsg').textContent = 'No se pudieron cargar filtros de calificaciones.';
     }
-
-    // Mensaje y actividad
-    byId('grMsg').textContent = updated ? `Se guardaron ${updated} calificación(es) para "${evaluation}".` : 'No hubo cambios para guardar.';
-    state.activities.push({ id: state.activities.length + 1, type: 'Calificaciones', description: `Actualizadas (${evaluation}) en clase ${class_id}`, actor_role: 'maestro', actor_name: 'Maestro' });
-    persist();
-    renderAdminHome(); // actualiza promedio visible en panel admin
   };
+
+  const renderGradeTable = async () => {
+    const class_id = Number(classSel.value);
+    const evaluation = evalSel.value.trim();
+    if (!class_id || !evaluation) return;
+
+    try {
+      const res = await fetch(`/api/grades/table/${class_id}/${encodeURIComponent(evaluation)}`);
+      if (!res.ok) throw new Error('No se pudo cargar la tabla');
+      const rows = await res.json();
+      const classMeta = state.classes.find((cl) => cl.id === class_id);
+
+      tableBody.innerHTML = rows.map((row) => {
+        return `<tr>
+          <td>${fullName(row)}</td>
+          <td>${row.career_name || '-'}</td>
+          <td>${classMeta?.name || row.class_name || '-'}</td>
+          <td>${evaluation}</td>
+          <td><input type="number" min="0" max="100" step="0.1" data-student-grade="${row.student_id}" value="${row.grade ?? ''}" /></td>
+        </tr>`;
+      }).join('');
+    } catch (error) {
+      console.error(error);
+      tableBody.innerHTML = '<tr><td colspan="5">No se pudo cargar la tabla de calificaciones.</td></tr>';
+    }
+  };
+
+  careerFilter.onchange = careerFilter.onchange || (() => {});
+  teacherFilter.onchange = teacherFilter.onchange || (() => {});
+  classSel.onchange = renderGradeTable;
+  evalSel.onchange = renderGradeTable;
+
+  byId('grLoad').onclick = renderGradeTable;
+  byId('grSave').onclick = async () => {
+    const class_id = Number(classSel.value);
+    const evaluation = evalSel.value.trim();
+    const inputs = tableBody.querySelectorAll('input[data-student-grade]');
+    const records = [];
+    inputs.forEach((input) => {
+      if (input.value === '') return;
+      records.push({ student_id: Number(input.getAttribute('data-student-grade')), grade: Number(input.value) });
+    });
+
+    try {
+      const res = await fetch('/api/grades', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          class_id,
+          evaluation,
+          records,
+          teacher_id: session.teacherId || session.userId
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'No se pudieron guardar');
+      byId('grMsg').textContent = `Calificaciones guardadas para ${evaluation}.`;
+      renderAdminHome();
+    } catch (error) {
+      console.error(error);
+      byId('grMsg').textContent = error.message;
+    }
+  };
+
+  applyFilters().then(renderGradeTable);
 }
 
 // Student Dashboard

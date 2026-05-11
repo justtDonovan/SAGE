@@ -10,10 +10,43 @@ const ClassController = {
     }
   },
 
+  getById: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const item = await ClassModel.getById(id);
+      if (!item) {
+        return res.status(404).json({ error: 'Clase no encontrada' });
+      }
+      res.json(item);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
   create: async (req, res) => {
     try {
       const id = await ClassModel.create(req.body);
       res.status(201).json({ id, ...req.body });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  update: async (req, res) => {
+    try {
+      const { id } = req.params;
+      await ClassModel.update(id, req.body);
+      res.json({ message: 'Clase actualizada' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+
+  remove: async (req, res) => {
+    try {
+      const { id } = req.params;
+      await ClassModel.remove(id);
+      res.json({ message: 'Clase eliminada' });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

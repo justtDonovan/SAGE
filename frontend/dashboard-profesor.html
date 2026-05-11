@@ -59,6 +59,13 @@
             <h2>Mis Alumnos</h2>
           </div>
           <div class="panel-body">
+            <div class="form-inline" style="margin-bottom: 1rem;">
+              <select id="attClass"></select>
+              <input type="date" id="attDate" />
+              <button id="attLoad" class="btn">Cargar lista</button>
+              <button id="attSave" class="btn primary compact">Guardar asistencia</button>
+            </div>
+            <div id="attMsg" class="password-feedback"></div>
             <table class="table">
               <thead>
                 <tr>
@@ -80,14 +87,27 @@
             <h2>Registro de Calificaciones</h2>
           </div>
           <div class="panel-body">
+            <div class="form-inline" style="margin-bottom: 1rem;">
+              <select id="grCareerFilter"></select>
+              <select id="grTeacherFilter"></select>
+              <select id="grClass"></select>
+              <select id="grEval">
+                <option value="Periodo 1">Periodo 1</option>
+                <option value="Periodo 2">Periodo 2</option>
+                <option value="Periodo 3">Periodo 3</option>
+              </select>
+              <button id="grLoad" class="btn">Cargar tabla</button>
+              <button id="grSave" class="btn primary compact">Guardar calificaciones</button>
+            </div>
+            <div id="grMsg" class="password-feedback"></div>
             <table class="table">
               <thead>
                 <tr>
                   <th>Alumno</th>
-                  <th>Clase</th>
-                  <th>Evaluación</th>
+                  <th>Carrera</th>
+                  <th>Materia</th>
+                  <th>Periodo</th>
                   <th>Calificación</th>
-                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody id="gradesTable"></tbody>
@@ -97,7 +117,7 @@
       </main>
     </section>
 
-    <script src="js/app.js"></script>
+    <script src="js/app.js?v=20260510"></script>
     <script>
       // Custom Cursor Logic
       const cursor = document.querySelector('.custom-cursor');

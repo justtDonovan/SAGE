@@ -1153,11 +1153,14 @@ function renderAdminReports() {
     const btnPdf = byId('btnPdfFromPreview'); if (btnPdf) btnPdf.disabled = false;
   };
   const btnPdf = byId('btnPdfFromPreview');
-  if (btnPdf) btnPdf.onclick = () => {
+  if (btnPdf) {
+    btnPdf.disabled = false;
+    btnPdf.onclick = () => {
     const class_id = Number(repClassSel.value);
     const evaluation = (repEvalInput.value || 'Periodo 1').trim();
     generateGradesReportPdf(class_id, evaluation);
-  };
+    };
+  }
 }
 
 async function buildGradesReportPreview(class_id, evaluation) {
@@ -1221,15 +1224,29 @@ function drawGradesChart(canvas, labels, values) {
   });
 }
 
-function generateGradesReportPdf(class_id, evaluation) {
-  const fileName = `reporte_calificaciones_${class_id}_${evaluation.replace(/\s+/g, '_')}.pdf`;
-  const url = `/api/grades/pdf/${class_id}/${encodeURIComponent(evaluation)}`;
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+async function generateGradesReportPdf(class_id, evaluation) {
+  try {
+    const url = `/api/grades/pdf/${class_id}/${encodeURIComponent(evaluation)}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      const errorBody = await res.json().catch(() => ({}));
+      throw new Error(errorBody.error || 'No se pudo generar el PDF');
+    }
+
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const fileName = `reporte_calificaciones_${class_id}_${evaluation.replace(/\s+/g, '_')}.pdf`;
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  } catch (error) {
+    console.error(error);
+    alert(error.message);
+  }
 }
 
 function openPrintWindow(title, contentHtml) {

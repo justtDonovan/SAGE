@@ -150,12 +150,8 @@ const GradeController = {
       }
 
       const rows = await GradeModel.getGradeTableByClassAndEval(classId, evaluation);
-      if (!rows.length) {
-        return res.status(404).json({ error: 'No hay datos para generar el reporte' });
-      }
-
       const stats = getReportStats(rows);
-      const meta = rows[0];
+      const meta = rows[0] || {};
       const pdf = new PDFDocument({ size: 'A4', layout: 'landscape', margin: 36 });
       const fileName = `reporte_calificaciones_${(meta.class_name || 'clase').replace(/\s+/g, '_')}_${evaluation.replace(/\s+/g, '_')}.pdf`;
 
@@ -184,7 +180,11 @@ const GradeController = {
 
       pdf.font('Helvetica-Bold').text('Detalle', { underline: true });
       pdf.moveDown(0.4);
-      drawReportTable(pdf, rows);
+      if (rows.length) {
+        drawReportTable(pdf, rows);
+      } else {
+        pdf.font('Helvetica').text('No hay calificaciones registradas para la clase y evaluación seleccionadas.');
+      }
 
       pdf.end();
     } catch (error) {

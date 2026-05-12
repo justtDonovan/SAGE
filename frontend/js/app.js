@@ -1222,25 +1222,14 @@ function drawGradesChart(canvas, labels, values) {
 }
 
 function generateGradesReportPdf(class_id, evaluation) {
-  const data = reportPreviewRows.length ? reportPreviewRows : [];
-  const vals = data.map(d => d.grade === '-' ? 0 : Number(d.grade));
-  const avg = vals.length ? (vals.reduce((a,b)=>a+Number(b),0)/vals.length).toFixed(2) : '-';
-  const min = vals.length ? Math.min(...vals) : '-';
-  const max = vals.length ? Math.max(...vals) : '-';
-  const fails = vals.filter(v => Number(v) === 0).length;
-  const rows = data.map(d => `<tr><td>${fullName(d)}</td><td>${d.group_name || '-'}</td><td>${d.grade ?? '-'}</td></tr>`).join('');
-  const cvs = byId('gradesChart');
-  const img = cvs ? `<img src="${cvs.toDataURL()}" style="width:100%;max-width:700px;height:auto" />` : '';
-  const content = `
-    <h2>Reporte de Calificaciones</h2>
-    <small>Fecha: ${new Date().toLocaleString('es-MX')}</small>
-    <div><b>Clase:</b> ${reportPreviewMeta.className} &nbsp; <b>Grupo:</b> ${reportPreviewMeta.groupName} &nbsp; <b>Evaluación:</b> ${evaluation} &nbsp; <b>Profesor:</b> ${reportPreviewMeta.teacherName}</div>
-    <table><thead><tr><th>Alumno</th><th>Grupo</th><th>Calificación</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="2">Promedio</td><td>${avg}</td></tr></tfoot></table>
-    <h3>Gráfica</h3>
-    ${img}
-    <div>Min: ${min} &nbsp; Max: ${max} &nbsp; Reprobados (0): ${fails}</div>
-  `;
-  openPrintWindow('Calificaciones', content);
+  const fileName = `reporte_calificaciones_${class_id}_${evaluation.replace(/\s+/g, '_')}.pdf`;
+  const url = `/api/grades/pdf/${class_id}/${encodeURIComponent(evaluation)}`;
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 }
 
 function openPrintWindow(title, contentHtml) {
